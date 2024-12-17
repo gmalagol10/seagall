@@ -11,7 +11,6 @@ import scipy
 
 import torch
 import torch_geometric
-from captum.attr import IntegratedGradients
 
 import grae
 from grae.models import GRAE
