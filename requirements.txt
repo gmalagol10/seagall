@@ -3,6 +3,7 @@ pandas
 episcanpy
 scanpy
 torch_geometric
+torcheval
 torch
 phate
 scikit-learn
