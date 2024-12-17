@@ -94,7 +94,7 @@ def embbedding_and_graph(adata, y=None, layer="X", model_name="Pappo", params=No
 	adata.obsp[f"{representantion}_kNN"], adata.obsm[f"{representantion}"], adata.layer[f"X_{representantion}"],  = scipy.sparse.csr_matrix(ad_ret.obsp["connectivities"], dtype="float32"), scipy.sparse.csr_matrix(ad_ret.X, dtype="float32"), Z[1]
 
 
-def classify_and_explain(adata, label, path, hypopt=True, n_feat=50)
+def classify_and_explain(adata, label, path, hypopt=True, n_feat=50):
 
 	'''
 	Function to extract the relevant features
