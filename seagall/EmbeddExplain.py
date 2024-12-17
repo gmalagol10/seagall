@@ -17,7 +17,6 @@ from grae.models import GRAE
 
 from . import ML_utils as mlu
 from . import Utils as ut
-from . import Models as mod
 from . import HPO as hpo
 
 from pathlib import Path
