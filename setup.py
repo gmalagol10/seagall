@@ -1,10 +1,11 @@
 from setuptools import setup, find_packages
+from pathlib import Path
 
 setup(
     name="seagall",
     version="0.1",
     packages=find_packages(),
-    install_requires=[],
+	install_requires=[l.strip() for l in Path('requirements.txt').read_text('utf-8').splitlines()],
     author="Gabriele",
     author_email="gabriele.malagoli3@gmail.com",
     description="Single-cell explain etc etc",
