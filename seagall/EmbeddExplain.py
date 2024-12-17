@@ -176,7 +176,7 @@ def classify_and_explain(adata, label, path, hypopt=True, n_feat=50)
 	criterion = torch.nn.CrossEntropyLoss(weight=torch.tensor(class_weights, dtype=torch.float), reduction="mean")
 
 	print(time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()), "Training model", flush=True)					
-	model, history = mlu.GAT_train_node_classifier(model, mydata, optimizer_model, criterion, f"{xai_path}_Model.pth"", epochs=500, patience=50)
+	model, history = mlu.GAT_train_node_classifier(model, mydata, optimizer_model, criterion, f"{xai_path}_Model.pth", epochs=500, patience=50)
 
 	with open(f"{xai_path}_Model_Progress.json", "w") as f:
 		json.dump(history, f)
