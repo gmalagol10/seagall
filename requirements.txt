@@ -5,7 +5,7 @@ scanpy
 torch_geometric
 torch
 phate
-grae @ https://github.com/KevinMoonLab/GRAE.git
+pip install --upgrade git+https://github.com/KevinMoonLab/GRAE.git
 scikit-learn
 optuna
 scipy
