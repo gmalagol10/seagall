@@ -15,10 +15,10 @@ import torch_geometric
 import grae
 from grae.models import GRAE
 
-import ML_utils as mlu
-import Utils as ut
-import Models as mod
-import HPO as hpo
+from . import ML_utils as mlu
+from . import Utils as ut
+from . import Models as mod
+from . import HPO as hpo
 
 from pathlib import Path
 
