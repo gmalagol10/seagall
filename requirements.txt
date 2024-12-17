@@ -6,7 +6,7 @@ torch_geometric
 torch
 phate
 grae
-sklearn
+scikit-learn
 optuna
 scipy
 time
