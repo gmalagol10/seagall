@@ -226,7 +226,7 @@ def preprocessing(ad, target_label=None, representantion=None, omic="ATAC", mode
 	
 	if representantion != None:	
 		if target_label != None:
-			adata = adata[adata.obs[target_label].astype(str)!="nan"]
+			adata = adata[adata.obs[target_label].dropna().index]
 			adata = adata[adata.obs.groupby(target_label).filter(lambda x : len(x)>50)[target_label].index,:]
 			mymap = dict([(y, str(x)) for x,y in enumerate(sorted(set(adata.obs[target_label])))])
 			inv_map = {v : k for k, v in mymap.items()}
