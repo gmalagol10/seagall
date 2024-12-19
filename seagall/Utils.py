@@ -100,7 +100,8 @@ def create_count_matrix(fragments_file : str, valid_bcs : list, features_space :
 	
 	if features_file[-10:]=="narrowPeak":
 		epi.pp.nucleosome_signal(adata, fragments_file)
-		epi.pp.tss_enrichment(adata, gtf=gtf_file, source=source, fragments=fragments_file)
+		if gtf_file != None:
+			epi.pp.tss_enrichment(adata, gtf=gtf_file, fragments=fragments_file)
 
 	return adata
   
@@ -141,8 +142,13 @@ def qc_filtering(adata, omic="ATAC"):
 	if omic=="ATAC":
 		try:
 			adata=adata[adata.obs.nucleosome_signal < 2]
+		except:
+			print("Could not filter cells based on nucleosome signal")
+			pass
+		try:
 			adata=adata[adata.obs.tss_enrichment_score > 2]
 		except:
+			print("Could not filter cells based on TSS enrichment")
 			pass
 
 	print("Adata's shape after cells and features filtering:", adata.shape, flush=True)
