@@ -238,7 +238,7 @@ def preprocessing(ad, target_label=None, representantion=None, omic="ATAC", mode
 			y=[]
 	
 		print(f"Embedding with {representantion}", flush=True)
-		ee.embbedding_and_graph(adata=adata, y=y, representantion=representantion, model_name=f"{model_name}_{representantion}_DR")
+		ee.embbedding_and_graph(adata=adata, y=y, model_name=f"{model_name}_{representantion}_DR")
 			
 	return adata
 
