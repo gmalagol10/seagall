@@ -55,7 +55,7 @@ def GeometricalEmbedding(M, y=None, epochs=300):
 	m = GRAE(epochs=300, patience=20, n_components=int(M.shape[1]**(1/3)))
 	temp=grae.data.base_dataset.BaseDataset(M, y, "none", 0.85, 42, y)
 	m.fit(temp)
-	return scipy.sparse.csr_matrix(m.transform(temp), dtype="float32"), scipy.sparse.csr_matrix(m.inverse_transform(m.transform(temp)), dtype="float32")
+	return m.transform(temp), scipy.sparse.csr_matrix(m.inverse_transform(m.transform(temp)), dtype="float32")
 
 def embbedding_and_graph(adata, y=None, layer="X", model_name="Pappo", params=None):
 
@@ -87,10 +87,10 @@ def embbedding_and_graph(adata, y=None, layer="X", model_name="Pappo", params=No
 		M=adata.layers[layer].copy()
 	
 	Z = GeometricalEmbedding(M, y=y)
-	ad_ret=sc.AnnData(scipy.sparse.csr_matrix(Z[0], dtype="float32"))
+	ad_ret=sc.AnnData(Z[0])
 	sc.pp.neighbors(ad_ret, use_rep="X", method="umap")
 
-	adata.obsp[f"{representantion}_kNN"], adata.obsm[f"{representantion}"], adata.layer[f"X_{representantion}"],  = scipy.sparse.csr_matrix(ad_ret.obsp["connectivities"], dtype="float32"), scipy.sparse.csr_matrix(ad_ret.X, dtype="float32"), Z[1]
+	adata.obsp[f"GRAE_graph"], adata.obsm["GRAE_ls"], adata.layer[f"X_GRAE"],  = scipy.sparse.csr_matrix(ad_ret.obsp["connectivities"], dtype="float32"), Z[0], Z[1]
 
 
 def classify_and_explain(adata, label, path, hypopt=True, n_feat=50):
