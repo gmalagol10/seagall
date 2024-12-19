@@ -233,9 +233,9 @@ def preprocessing(ad, target_label=None, representantion=None, omic="ATAC", mode
 			adata.uns["map"] = mymap
 			adata.uns["inv_map"] = inv_map
 			adata.obs["target"] = [mymap[x] for x in adata.obs[target_label]]
-			y = adata.obs["target"].astype(int).to_numpy()<
+			y = adata.obs["target"].astype(int).to_numpy()
 		else:
-			y=[]
+			y = None
 	
 		print(f"Embedding with {representantion}", flush=True)
 		ee.embbedding_and_graph(adata=adata, y=y, model_name=f"{model_name}_{representantion}_DR")
