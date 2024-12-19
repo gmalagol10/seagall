@@ -105,7 +105,7 @@ def create_count_matrix(fragments_file : str, valid_bcs : list, features_space :
 
 	return adata
   
-def qc_filtering(adata, omic="ATAC"):
+def qc_filtering(ad, omic="ATAC", copy=True):
 
 	'''
 	Function to create a sc-ATACseq count matrix. It's a wrapping around the main function of EpiScanpy.
@@ -121,6 +121,11 @@ def qc_filtering(adata, omic="ATAC"):
 	AnnData object after QC and filtering
 
 	'''
+
+	if copy:
+		adata=ad.copy()
+	else:
+		adata=ad
 
 	epi.pp.qc_stats(adata, verbose=False)
 		
@@ -184,7 +189,7 @@ def qc_filtering(adata, omic="ATAC"):
 	return adata 
  
 		
-def preprocessing(adata, target_label=None, representantion=None, omic="ATAC", model_name="Pappo"):
+def preprocessing(ad, target_label=None, representantion=None, omic="ATAC", model_name="Pappo", copy=True):
 
 	'''
 	Function to create a sc-ATACseq count matrix. It's a wrapping around the main function of EpiScanpy.
@@ -212,7 +217,12 @@ def preprocessing(adata, target_label=None, representantion=None, omic="ATAC", m
 
 	print("QC and filtering", flush=True)
 
-	adata=qc_filtering(adata, omic=omic)
+	if copy:
+		adata=ad.copy()
+	else:
+		adata=ad
+
+	adata=qc_filtering(adata, omic=omic, copy=False)
 	
 	if representantion != None:	
 		if target_label != None:
