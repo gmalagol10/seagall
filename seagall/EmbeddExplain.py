@@ -85,7 +85,7 @@ def embbedding_and_graph(adata, y=None, layer="X", model_name="Pappo", params=No
 	else:
 		M=adata.layers[layer].copy()
 	
-	Z = GeomtricalEmbedding(M, y=y)
+	Z = GeometricalEmbedding(M, y=y)
 	ad_ret=sc.AnnData(scipy.sparse.csr_matrix(Z[0], dtype="float32"))
 	del Z
 	sc.pp.neighbors(ad_ret, use_rep="X", method="umap")
