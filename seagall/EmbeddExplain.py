@@ -51,7 +51,7 @@ def GeometricalEmbedding(M, y=None, epochs=300):
 	else:
 		y=np.ones(shape=(M.shape[0],))		
 	
-	M=scipy.sparse.csr_matrix(M, dtype="float32").todense()
+	M = scipy.sparse.csr_matrix(M, dtype="float32").todense()
 	m = GRAE(epochs=300, patience=20, n_components=int(M.shape[1]**(1/3)))
 	temp=grae.data.base_dataset.BaseDataset(M, y, "none", 0.85, 42, y)
 	m.fit(temp)
@@ -88,7 +88,6 @@ def embbedding_and_graph(adata, y=None, layer="X", model_name="Pappo", params=No
 	
 	Z = GeometricalEmbedding(M, y=y)
 	ad_ret=sc.AnnData(scipy.sparse.csr_matrix(Z[0], dtype="float32"))
-	del Z
 	sc.pp.neighbors(ad_ret, use_rep="X", method="umap")
 
 	adata.obsp[f"{representantion}_kNN"], adata.obsm[f"{representantion}"], adata.layer[f"X_{representantion}"],  = scipy.sparse.csr_matrix(ad_ret.obsp["connectivities"], dtype="float32"), scipy.sparse.csr_matrix(ad_ret.X, dtype="float32"), Z[1]
