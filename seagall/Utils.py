@@ -3,7 +3,7 @@ import scanpy as sc
 import numpy as np
 import scipy
 
-import EmbeddExplain as ee
+from . import EmbeddExplain as ee
 
 colors_to_use=[(0.34550725069638827, 0.4203708006658883, 0.9696902293486781),
  (0.9893800026041992, 0.378955911742755, 0.21756841368122667),
