@@ -224,8 +224,8 @@ def preprocessing(ad, target_label=None, representantion=None, omic="ATAC", mode
 
 	adata=qc_filtering(adata, omic=omic, copy=False)
 	
-	if representantion != None:	
-		if target_label != None:
+	if representantion is not None:	
+		if target_label is not None:
 			adata = adata[adata.obs[target_label].dropna().index]
 			adata = adata[adata.obs.groupby(target_label).filter(lambda x : len(x)>50)[target_label].index,:]
 			mymap = dict([(y, str(x)) for x,y in enumerate(sorted(set(adata.obs[target_label])))])
@@ -233,7 +233,7 @@ def preprocessing(ad, target_label=None, representantion=None, omic="ATAC", mode
 			adata.uns["map"] = mymap
 			adata.uns["inv_map"] = inv_map
 			adata.obs["target"] = [mymap[x] for x in adata.obs[target_label]]
-			y = adata.obs["target"].astype(int).to_numpy()
+			y = adata.obs["target"].astype(int).to_numpy()<
 		else:
 			y=[]
 	

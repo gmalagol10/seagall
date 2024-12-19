@@ -45,7 +45,7 @@ def GeometricalEmbedding(M, y=None, epochs=300):
 
 	'''
 
-	if y != None:
+	if y is not None:
 		y=np.array(y).astype(int)
 	else:
 		y=np.ones(shape=(M.shape[0],))		
