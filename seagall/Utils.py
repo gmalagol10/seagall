@@ -168,7 +168,7 @@ def qc_filtering(ad, omic="ATAC", copy=True):
 	return adata 
  
 		
-def preprocessing(ad, target_label=None, representantion=None, omic="ATAC", model_name="Pappo", copy=True):
+def preprocessing(ad, target_label=None, reprentation=None, omic="ATAC", model_name="Pappo", copy=True):
 
 	'''
 	Function to create a sc-ATACseq count matrix. It's a wrapping around the main function of EpiScanpy.
@@ -203,7 +203,7 @@ def preprocessing(ad, target_label=None, representantion=None, omic="ATAC", mode
 
 	adata=qc_filtering(adata, omic=omic, copy=False)
 	
-	if representantion is not None:	
+	if reprentation is not None:	
 		if target_label is not None:
 			adata = adata[adata.obs[target_label].dropna().index]
 			adata = adata[adata.obs.groupby(target_label).filter(lambda x : len(x)>50)[target_label].index,:]
@@ -216,8 +216,8 @@ def preprocessing(ad, target_label=None, representantion=None, omic="ATAC", mode
 		else:
 			y = None
 	
-		print(f"Embedding with {representantion}", flush=True)
-		ee.embbedding_and_graph(adata=adata, y=y, model_name=f"{model_name}_{representantion}_DR")
+		print(f"Embedding with {reprentation}", flush=True)
+		ee.embbedding_and_graph(adata=adata, y=y, model_name=f"{model_name}_{reprentation}_DR")
 			
 	return adata
 
