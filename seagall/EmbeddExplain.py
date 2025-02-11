@@ -25,7 +25,7 @@ from pathlib import Path
 torch.manual_seed(np.random.randint(0,10000))
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-def GeometricalEmbedding(M, y=None, epochs=300):
+def GeometricalEmbedding(M, y=None, epochs=300, model_name="SeagallGRAE"):
 	'''
 	Embedding of a feature matrix preserving geometry. See https://github.com/KevinMoonLab/GRAE for more infos 
 
@@ -55,9 +55,10 @@ def GeometricalEmbedding(M, y=None, epochs=300):
 	m = GRAE(epochs=300, patience=20, n_components=int(M.shape[1]**(1/3)))
 	temp=grae.data.base_dataset.BaseDataset(M, y, "none", 0.85, 42, y)
 	m.fit(temp)
+	m.save(f"{model_name}.pth")
 	return m.transform(temp), scipy.sparse.csr_matrix(m.inverse_transform(m.transform(temp)), dtype="float32")
 
-def embbedding_and_graph(adata, y=None, layer="X", model_name="Pappo", params=None):
+def embbedding_and_graph(adata, y=None, layer="X", model_name="SeagallGRAE", params=None):
 
 	'''
 	Function to contruct the k-NN graph of the cell in GRAE's latent space
@@ -86,7 +87,7 @@ def embbedding_and_graph(adata, y=None, layer="X", model_name="Pappo", params=No
 	else:
 		M=adata.layers[layer].copy()
 	
-	Z = GeometricalEmbedding(M, y=y)
+	Z = GeometricalEmbedding(M, y=y, model_name=model_name)
 	ad_ret=sc.AnnData(Z[0])
 	sc.pp.neighbors(ad_ret, use_rep="X", method="umap")
 
