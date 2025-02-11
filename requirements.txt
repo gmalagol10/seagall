@@ -6,7 +6,6 @@ episcanpy
 torch_geometric==2.5.2
 torcheval==0.0.7
 torch==2.2.2
-torchvision
 torch-sparse==0.6.18
 torch-scatter==2.1.2
 phate==1.0.11
