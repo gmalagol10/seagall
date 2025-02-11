@@ -300,12 +300,12 @@ def GAT_train_node_classifier(model, data, optimizer, criterion, model_name, epo
 	
 	for epoch in range(1, epochs + 1):
 		### Training
-		train_loss, train_f1w = GAT_1_step_training(model, train_loader, optimizer, criterion, GAT)
+		train_loss, train_f1w = GAT_1_step_training(model, train_loader, optimizer, criterion)
 		history["TrainLoss"].append(np.around(train_loss, decimals=5))
 		history["TrainF1W"].append(np.around(train_f1w, decimals=5))
 
 		### Validation
-		val_loss, val_f1w = GAT_validation(model, val_loader, optimizer, criterion, GAT)
+		val_loss, val_f1w = GAT_validation(model, val_loader, optimizer, criterion)
 		history["ValLoss"].append(np.around(val_loss, decimals=5))
 		history["ValF1W"].append(np.around(val_f1w, decimals=5))
 
@@ -317,7 +317,7 @@ def GAT_train_node_classifier(model, data, optimizer, criterion, model_name, epo
 			print(f"GAT checkpoint! Best epoch {best_epoch} | Best val loss {val_loss:.3f} | Best val F1W {best_val_f1w:.3f}", flush=True)
 		elif epoch - best_epoch > patience:
 			model.load_state_dict(torch.load(model_name))
-			val_loss, best_val_f1w = GAT_validation(model, val_loader, optimizer, criterion, GAT)
+			val_loss, best_val_f1w = GAT_validation(model, val_loader, optimizer, criterion)
 			print(f"GAT early stopped at epoch {epoch} with best epoch {best_epoch} | Best val loss: {val_loss:.3f} | Best val F1W: {best_val_f1w:.3f}", flush=True)
 			return model, history  
 	
