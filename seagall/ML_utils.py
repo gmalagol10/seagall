@@ -7,7 +7,6 @@ import sklearn
 
 import torch
 import torch_geometric
-from torcheval import metrics
 
 class GAT(torch.nn.Module):
 
