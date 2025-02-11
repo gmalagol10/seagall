@@ -7,6 +7,8 @@ torch_geometric==2.5.2
 torcheval==0.0.7
 torch==2.2.2
 torchvision
+torch-sparse==0.6.18
+pyg-lib
 phate==1.0.11
 scikit-learn
 optuna
