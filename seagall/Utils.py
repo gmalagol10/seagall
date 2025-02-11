@@ -145,9 +145,10 @@ def qc_filtering(ad, omic="ATAC", copy=True):
 		adata=adata[adata.obs.predicted_doublet==False]
 		print("Adata's shape after doublets filtering:", adata.shape, flush=True)
    
-	epi.pp.normalize_total(adata)
-		
 	sc.pp.highly_variable_genes(adata, flavor='seurat_v3')
+
+	sc.pp.normalize_total(adata)
+		
 	if omic=="GEX":
 		min_var = np.quantile(adata.var.variances_norm, 0.9)
 	else:
@@ -159,7 +160,7 @@ def qc_filtering(ad, omic="ATAC", copy=True):
 
 	print("Adata's shape after HVG filtering:", adata.shape, flush=True)
 	
-	epi.pp.log1p(adata)
+	sc.pp.log1p(adata)
 
 	adata = adata[:, adata.X.max(axis=0)>0]
 	adata = adata[adata.X.max(axis=1)>0]
