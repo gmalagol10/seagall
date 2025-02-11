@@ -123,7 +123,6 @@ def classify_and_explain(adata, label, path, hypopt=False, n_feat=50):
 	Path(f"{path}/Seagal_{label}").mkdir(parents=True, exist_ok=True)
 		
 	print(time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()), f"Creating dataset", flush=True)					
-	adata = sc.read(matrix)
 
 	adata = adata[adata.obs[label].dropna().index]
 	mymap = dict([(y,str(x)) for x,y in enumerate(sorted(set(adata.obs[label])))])
