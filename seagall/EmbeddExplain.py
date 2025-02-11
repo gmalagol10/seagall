@@ -90,10 +90,10 @@ def embbedding_and_graph(adata, y=None, layer="X", model_name="Pappo", params=No
 	ad_ret=sc.AnnData(Z[0])
 	sc.pp.neighbors(ad_ret, use_rep="X", method="umap")
 
-	adata.obsp[f"GRAE_graph"], adata.obsm["GRAE_ls"], adata.layer[f"X_GRAE"],  = scipy.sparse.csr_matrix(ad_ret.obsp["connectivities"], dtype="float32"), Z[0], Z[1]
+	adata.obsp[f"GRAE_graph"], adata.obsm["GRAE_ls"], adata.layer[f"GRAE_X"],  = scipy.sparse.csr_matrix(ad_ret.obsp["connectivities"], dtype="float32"), Z[0], Z[1]
 
 
-def classify_and_explain(adata, label, path, hypopt=True, n_feat=50):
+def classify_and_explain(adata, label, path, hypopt=False, n_feat=50):
 
 	'''
 	Function to extract the relevant features
