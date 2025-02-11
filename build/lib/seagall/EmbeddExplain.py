@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import scanpy as sc
 
 import sys
 import random
@@ -11,15 +12,13 @@ import scipy
 
 import torch
 import torch_geometric
-from captum.attr import IntegratedGradients
 
 import grae
 from grae.models import GRAE
 
-import ML_utils as mlu
-import Utils as ut
-import Models as mod
-import HPO as hpo
+from . import ML_utils as mlu
+from . import Utils as ut
+from . import HPO as hpo
 
 from pathlib import Path
 
@@ -47,16 +46,16 @@ def GeometricalEmbedding(M, y=None, epochs=300):
 
 	'''
 
-	if y != None:
+	if y is not None:
 		y=np.array(y).astype(int)
 	else:
 		y=np.ones(shape=(M.shape[0],))		
 	
-	M=scipy.sparse.csr_matrix(M, dtype="float32").todense()
+	M = scipy.sparse.csr_matrix(M, dtype="float32").todense()
 	m = GRAE(epochs=300, patience=20, n_components=int(M.shape[1]**(1/3)))
 	temp=grae.data.base_dataset.BaseDataset(M, y, "none", 0.85, 42, y)
 	m.fit(temp)
-	return scipy.sparse.csr_matrix(m.transform(temp), dtype="float32"), scipy.sparse.csr_matrix(m.inverse_transform(m.transform(temp)), dtype="float32")
+	return m.transform(temp), scipy.sparse.csr_matrix(m.inverse_transform(m.transform(temp)), dtype="float32")
 
 def embbedding_and_graph(adata, y=None, layer="X", model_name="Pappo", params=None):
 
@@ -78,7 +77,7 @@ def embbedding_and_graph(adata, y=None, layer="X", model_name="Pappo", params=No
 	Output
 	------
 	
-	AnnData object with the graph in .obsp and the reprentation in .obsm, decoded matrix in .layer
+	AnnData object with the graph in .obsp and the representation in .obsm, decoded matrix in .layer
 
 	'''
 	
@@ -87,15 +86,14 @@ def embbedding_and_graph(adata, y=None, layer="X", model_name="Pappo", params=No
 	else:
 		M=adata.layers[layer].copy()
 	
-	Z = GeomtricalEmbedding(M, y=y)
-	ad_ret=sc.AnnData(scipy.sparse.csr_matrix(Z[0], dtype="float32"))
-	del Z
+	Z = GeometricalEmbedding(M, y=y)
+	ad_ret=sc.AnnData(Z[0])
 	sc.pp.neighbors(ad_ret, use_rep="X", method="umap")
 
-	adata.obsp[f"{representantion}_kNN"], adata.obsm[f"{representantion}"], adata.layer[f"X_{representantion}"],  = scipy.sparse.csr_matrix(ad_ret.obsp["connectivities"], dtype="float32"), scipy.sparse.csr_matrix(ad_ret.X, dtype="float32"), Z[1]
+	adata.obsp[f"GRAE_graph"], adata.obsm["GRAE_ls"], adata.layers[f"GRAE_X"],  = scipy.sparse.csr_matrix(ad_ret.obsp["connectivities"], dtype="float32"), Z[0], Z[1]
 
 
-def classify_and_explain(adata, label, path, hypopt=True, n_feat=50)
+def classify_and_explain(adata, label, path, hypopt=False, n_feat=50):
 
 	'''
 	Function to extract the relevant features
@@ -126,6 +124,7 @@ def classify_and_explain(adata, label, path, hypopt=True, n_feat=50)
 	print(time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()), f"Creating dataset", flush=True)					
 	adata = sc.read(matrix)
 
+	adata = adata[adata.obs[label].dropna().index]
 	mymap = dict([(y,str(x)) for x,y in enumerate(sorted(set(adata.obs[label])))])
 	inv_map = {v: k for k, v in mymap.items()}
 	adata.uns["map"]=mymap
@@ -177,7 +176,7 @@ def classify_and_explain(adata, label, path, hypopt=True, n_feat=50)
 	criterion = torch.nn.CrossEntropyLoss(weight=torch.tensor(class_weights, dtype=torch.float), reduction="mean")
 
 	print(time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()), "Training model", flush=True)					
-	model, history = mlu.GAT_train_node_classifier(model, mydata, optimizer_model, criterion, f"{xai_path}_Model.pth"", epochs=500, patience=50)
+	model, history = mlu.GAT_train_node_classifier(model, mydata, optimizer_model, criterion, f"{xai_path}_Model.pth", epochs=500, patience=50)
 
 	with open(f"{xai_path}_Model_Progress.json", "w") as f:
 		json.dump(history, f)

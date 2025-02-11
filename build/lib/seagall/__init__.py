@@ -1,6 +1,10 @@
 # seagall/__init__.py
 
-from .HPO import *
-from .EmbeddExplain import *
-from .Utils import *
-from .ML_utils import *
+__author__ = ', '.join(['Gabriele Malagoli'])
+
+__version__ = 0.1
+
+from . import Utils as ut
+from . import ML_utils as mlu
+from . import EmbeddExplain as ee
+from . import HPO as hpo

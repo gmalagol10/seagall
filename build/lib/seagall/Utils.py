@@ -3,28 +3,7 @@ import scanpy as sc
 import numpy as np
 import scipy
 
-import EmbeddExplain as ee
-
-colors_to_use=[(0.34550725069638827, 0.4203708006658883, 0.9696902293486781),
- (0.9893800026041992, 0.378955911742755, 0.21756841368122667),
- (0.3959642074605608, 0.24823947872676938, 0.4016676539297192),
- (0.9937826924994482, 0.4211527500079969, 0.8812994030921271),
- (0.4140058397372807, 0.9619317608252869, 0.3109026417629064),
- (0.2286247431221609, 0.6437632542888629, 0.4081322805120583),
- (0.25003260615661993, 0.938691496932296, 0.9192515923797947),
- (0.7646511697684856, 0.24254983894398235, 0.7085129830496552),
- (0.3017721221187747, 0.6522700618245787, 0.9844707721904342),
- (0.21782892631529166, 0.2854088109905996, 0.7174819557293214),
- (0.9991896546476063, 0.4844986464266022, 0.5344476773522967),
- (0.8919236560192338, 0.7949117963224906, 0.7730486745511909),
- (0.6428145648345002, 0.31108252586505475, 0.2041098261347507),
- (0.20269999368314223, 0.7748472379028853, 0.6824940025160084),
- (0.9819923318374866, 0.6965816490867496, 0.21263663000131983),
- (0.809020033101876, 0.23056728504993104, 0.9541856467035792),
- (0.9191255237720919, 0.20589563833687236, 0.4656154484972612),
- (0.4066816185888487, 0.7781338620666193, 0.22302116197384453),
- (0.9393586762460103, 0.9614694589148117, 0.22619331869433382),
- (0.29226458048518345, 0.42830335364029093, 0.6916335500700534)]
+from . import EmbeddExplain as ee
 
 def create_count_matrix(fragments_file : str, valid_bcs : list, features_space : str, features_file=None, gtf_file=None, source=None, meta=None):
 
@@ -100,11 +79,12 @@ def create_count_matrix(fragments_file : str, valid_bcs : list, features_space :
 	
 	if features_file[-10:]=="narrowPeak":
 		epi.pp.nucleosome_signal(adata, fragments_file)
-		epi.pp.tss_enrichment(adata, gtf=gtf_file, source=source, fragments=fragments_file)
+		if gtf_file != None:
+			epi.pp.tss_enrichment(adata, gtf=gtf_file, fragments=fragments_file)
 
 	return adata
   
-def qc_filtering(adata, omic="ATAC"):
+def qc_filtering(ad, omic="ATAC", copy=True):
 
 	'''
 	Function to create a sc-ATACseq count matrix. It's a wrapping around the main function of EpiScanpy.
@@ -120,6 +100,11 @@ def qc_filtering(adata, omic="ATAC"):
 	AnnData object after QC and filtering
 
 	'''
+
+	if copy:
+		adata=ad.copy()
+	else:
+		adata=ad
 
 	epi.pp.qc_stats(adata, verbose=False)
 		
@@ -141,8 +126,13 @@ def qc_filtering(adata, omic="ATAC"):
 	if omic=="ATAC":
 		try:
 			adata=adata[adata.obs.nucleosome_signal < 2]
+		except:
+			print("Could not filter cells based on nucleosome signal")
+			pass
+		try:
 			adata=adata[adata.obs.tss_enrichment_score > 2]
 		except:
+			print("Could not filter cells based on TSS enrichment")
 			pass
 
 	print("Adata's shape after cells and features filtering:", adata.shape, flush=True)
@@ -155,9 +145,10 @@ def qc_filtering(adata, omic="ATAC"):
 		adata=adata[adata.obs.predicted_doublet==False]
 		print("Adata's shape after doublets filtering:", adata.shape, flush=True)
    
-	epi.pp.normalize_total(adata)
-		
 	sc.pp.highly_variable_genes(adata, flavor='seurat_v3')
+
+	sc.pp.normalize_total(adata)
+		
 	if omic=="GEX":
 		min_var = np.quantile(adata.var.variances_norm, 0.9)
 	else:
@@ -169,7 +160,7 @@ def qc_filtering(adata, omic="ATAC"):
 
 	print("Adata's shape after HVG filtering:", adata.shape, flush=True)
 	
-	epi.pp.log1p(adata)
+	sc.pp.log1p(adata)
 
 	adata = adata[:, adata.X.max(axis=0)>0]
 	adata = adata[adata.X.max(axis=1)>0]
@@ -178,7 +169,7 @@ def qc_filtering(adata, omic="ATAC"):
 	return adata 
  
 		
-def preprocessing(adata, target_label=None, representantion=None, omic="ATAC", model_name="Pappo"):
+def preprocessing(ad, target_label=None, representation=None, omic="ATAC", model_name="Pappo", copy=True):
 
 	'''
 	Function to create a sc-ATACseq count matrix. It's a wrapping around the main function of EpiScanpy.
@@ -206,11 +197,16 @@ def preprocessing(adata, target_label=None, representantion=None, omic="ATAC", m
 
 	print("QC and filtering", flush=True)
 
-	adata=qc_filtering(adata, omic=omic)
+	if copy:
+		adata=ad.copy()
+	else:
+		adata=ad
+
+	adata=qc_filtering(adata, omic=omic, copy=False)
 	
-	if representantion != None:	
-		if target_label != None:
-			adata = adata[adata.obs[target_label].astype(str)!="nan"]
+	if representation is not None:	
+		if target_label is not None:
+			adata = adata[adata.obs[target_label].dropna().index]
 			adata = adata[adata.obs.groupby(target_label).filter(lambda x : len(x)>50)[target_label].index,:]
 			mymap = dict([(y, str(x)) for x,y in enumerate(sorted(set(adata.obs[target_label])))])
 			inv_map = {v : k for k, v in mymap.items()}
@@ -219,10 +215,10 @@ def preprocessing(adata, target_label=None, representantion=None, omic="ATAC", m
 			adata.obs["target"] = [mymap[x] for x in adata.obs[target_label]]
 			y = adata.obs["target"].astype(int).to_numpy()
 		else:
-			y=[]
+			y = None
 	
-		print(f"Embedding with {representantion}", flush=True)
-		ee.embbedding_and_graph(adata=adata, y=y, representantion=representantion, model_name=f"{model_name}_{representantion}_DR")
+		print(f"Embedding with {representation}", flush=True)
+		ee.embbedding_and_graph(adata=adata, y=y, model_name=f"{model_name}_{representation}_DR")
 			
 	return adata
 
@@ -239,12 +235,3 @@ def flat_list(l):
 def most_common(l):
 	l=list(l)
 	return max(set(l), key=l.count)
-
-	
-def my_polynom(params, x):
-	n = len(params)
-	assert n > 0
-	x_vec = np.array([np.power(x, i) for i in range(n - 1, -1, -1)])
-	return x_vec.T @ np.array(params)
-
-
