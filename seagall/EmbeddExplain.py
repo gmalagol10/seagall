@@ -77,7 +77,7 @@ def embbedding_and_graph(adata, y=None, layer="X", model_name="Pappo", params=No
 	Output
 	------
 	
-	AnnData object with the graph in .obsp and the reprentation in .obsm, decoded matrix in .layer
+	AnnData object with the graph in .obsp and the representation in .obsm, decoded matrix in .layer
 
 	'''
 	
