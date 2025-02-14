@@ -3,12 +3,12 @@ numba==0.58.0
 scanpy==1.10.1
 pandas==1.5.3
 episcanpy
-torch==2.0.1
+torch==2.6.0
 torch_geometric==2.5.2
-torch-sparse==0.6.18
-torch-scatter==2.1.2
-torchvision==0.15.2
-phate==1.0.11
+torch-sparse
+torch-scatter
+torchvision
+phate
 scikit-learn
 optuna
 scipy
