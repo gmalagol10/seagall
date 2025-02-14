@@ -12,10 +12,9 @@ import scipy
 
 import torch
 import torch_geometric
-import torch.nn as nn
 
-#import grae
-#from grae.models import GRAE
+import grae
+from grae.models import GRAE
 
 from . import ML_utils as mlu
 from . import Utils as ut
@@ -25,7 +24,6 @@ from pathlib import Path
 
 torch.manual_seed(np.random.randint(0,10000))
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
 
 def GeometricalEmbedding(M, y=None, epochs=300, model_name="SeagallGRAE"):
 	'''
@@ -54,8 +52,8 @@ def GeometricalEmbedding(M, y=None, epochs=300, model_name="SeagallGRAE"):
 		y=np.ones(shape=(M.shape[0],))		
 	
 	M = scipy.sparse.csr_matrix(M, dtype="float32").todense()
-#	m = GRAE(epochs=300, patience=20, n_components=int(M.shape[1]**(1/3)))
-#	temp=grae.data.base_dataset.BaseDataset(M, y, "none", 0.85, 42, y)
+	m = GRAE(epochs=300, patience=20, n_components=int(M.shape[1]**(1/3)))
+	temp=grae.data.base_dataset.BaseDataset(M, y, "none", 0.85, 42, y)
 	m.fit(temp)
 	m.save(f"{model_name}.pth")
 	return m.transform(temp), scipy.sparse.csr_matrix(m.inverse_transform(m.transform(temp)), dtype="float32")
@@ -84,7 +82,12 @@ def embbedding_and_graph(adata, y=None, layer="X", model_name="SeagallGRAE", par
 
 	'''
 	
-	Z = GeometricalEmbedding(adata=adata, y=y, model_name=model_name, layer=layer)
+	if layer == "X":
+		M=adata.X.copy()
+	else:
+		M=adata.layers[layer].copy()
+	
+	Z = GeometricalEmbedding(M, y=y, model_name=model_name)
 	ad_ret=sc.AnnData(Z[0])
 	sc.pp.neighbors(ad_ret, use_rep="X", method="umap")
 
