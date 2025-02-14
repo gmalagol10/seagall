@@ -7,4 +7,4 @@ Single-cell Explainable Geometry Aware Graph Attention Learning
 ```bash
 pip install --upgrade git+https://github.com/KevinMoonLab/GRAE.git
 
-pip install git+https://github.com/gmalagol10/seagall
+pip install git+https://github.com/gmalagol10/seagall --force-reintstall --upgrade
