@@ -85,7 +85,7 @@ def create_count_matrix(fragments_file : str, valid_bcs : list, features_space :
 
 	return adata
   
-def qc_filtering(ad, omic="ATAC", copy=True):
+def qc_filtering(adata, omic="ATAC"):
 
 	'''
 	Function to create a sc-ATACseq count matrix. It's a wrapping around the main function of EpiScanpy.
@@ -95,6 +95,8 @@ def qc_filtering(ad, omic="ATAC", copy=True):
 
 	adata : raw count matrix to process
 
+	omic : single-cell tehconolgy used to profile cells. Either ATAC or GEX
+
 	Output
 	------
 	
@@ -102,10 +104,6 @@ def qc_filtering(ad, omic="ATAC", copy=True):
 
 	'''
 
-	if copy:
-		adata=ad.copy()
-	else:
-		adata=ad
 
 	epi.pp.qc_stats(adata, verbose=False)
 		
@@ -170,7 +168,7 @@ def qc_filtering(ad, omic="ATAC", copy=True):
 	return adata 
  
 		
-def preprocessing(ad, target_label=None, representation=None, omic="ATAC", model_name="Pappo", copy=True):
+def preprocessing(adata, target_label=None, representation=None, omic="ATAC", model_name="Pappo",):
 
 	'''
 	Function to create a sc-ATACseq count matrix. It's a wrapping around the main function of EpiScanpy.
@@ -198,12 +196,7 @@ def preprocessing(ad, target_label=None, representation=None, omic="ATAC", model
 
 	print("QC and filtering", flush=True)
 
-	if copy:
-		adata=ad.copy()
-	else:
-		adata=ad
-
-	adata=qc_filtering(adata, omic=omic, copy=False)
+	adata=qc_filtering(adata, omic=omic)
 	
 	if representation is not None:	
 		if target_label is not None:

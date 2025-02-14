@@ -25,7 +25,7 @@ from pathlib import Path
 torch.manual_seed(np.random.randint(0,10000))
 device = 'cpu'
 
-def GeometricalEmbedding(M, y=None, epochs=300, model_name="SeagallGRAE"):
+def GeometricalEmbedding(M, y=None, epochs=300, patience=20, train_size=0.85, model_name="SeagallGRAE"):
 	'''
 	Embedding of a feature matrix preserving geometry. See https://github.com/KevinMoonLab/GRAE for more infos 
 
@@ -34,9 +34,15 @@ def GeometricalEmbedding(M, y=None, epochs=300, model_name="SeagallGRAE"):
 
 	M : N * F matrix with N cells and F features
 	
-	y : target label, important for the train-val-split of cells accounting for label unbalance
+	y : target label, important for the train-val-split of cells accounting for label unbalance, default = None
 
 	epochs : number of epoch to train the GRAE for, default = 300
+
+	patience : early stopping threshold, default = 20
+
+	train_size : fraction of dataset to use for training the GRAE, default = 0.85
+
+	model_name : name to use to save the model, default =  SeagallGRAE
 
 
 	Output
@@ -51,14 +57,14 @@ def GeometricalEmbedding(M, y=None, epochs=300, model_name="SeagallGRAE"):
 	else:
 		y=np.ones(shape=(M.shape[0],))		
 	
-	M = scipy.sparse.csr_matrix(M, dtype="float32").todense()
-	m = GRAE(epochs=300, patience=20, n_components=int(M.shape[1]**(1/3)))
-	temp=grae.data.base_dataset.BaseDataset(M, y, "none", 0.85, 42, y)
+	M = scipy.sparse.csr_matrix(M, dtype="float32").toarray()
+	m = GRAE(epochs=epochs, patience=patience, n_components=int(np.around(M.shape[1]**(1/3), decimals=0))
+	temp=grae.data.base_dataset.BaseDataset(M, y, "none", train_size, 42, y)
 	m.fit(temp)
 	m.save(f"{model_name}.pth")
 	return m.transform(temp), scipy.sparse.csr_matrix(m.inverse_transform(m.transform(temp)), dtype="float32")
 
-def embbedding_and_graph(adata, y=None, layer="X", model_name="SeagallGRAE", params=None):
+def embbedding_and_graph(adata, y=None, layer="X", epochs=300, patience=20, train_size=0.85, model_name="SeagallGRAE"):
 
 	'''
 	Function to contruct the k-NN graph of the cell in GRAE's latent space
@@ -74,6 +80,12 @@ def embbedding_and_graph(adata, y=None, layer="X", model_name="SeagallGRAE", par
 
 	epochs : number of epoch to train the GRAE for, default = 300
 
+	patience : early stopping threshold, default = 20
+
+	train_size : fraction of dataset to use for training the GRAE, default = 0.85
+
+	model_name : name to use to save the model, default =  SeagallGRAE
+
 
 	Output
 	------
@@ -87,7 +99,7 @@ def embbedding_and_graph(adata, y=None, layer="X", model_name="SeagallGRAE", par
 	else:
 		M=adata.layers[layer].copy()
 	
-	Z = GeometricalEmbedding(M, y=y, model_name=model_name)
+	Z = GeometricalEmbedding(M, y=y, epochs=epochs, patience=patience, train_size=train_size, model_name=model_name)
 	ad_ret=sc.AnnData(Z[0])
 	sc.pp.neighbors(ad_ret, use_rep="X", method="umap")
 
@@ -131,16 +143,15 @@ def classify_and_explain(adata, label, path, hypopt=False, n_feat=50):
 	adata.uns["inv_map"]=inv_map
 	adata.obs["target"]=[mymap[x] for x in adata.obs[label]]
 
-	edges = pd.DataFrame(adata.obsp["GRAE_graph"].todense()).rename_axis('Source')\
+	edges = pd.DataFrame(adata.obsp["GRAE_graph"].toarray()).rename_axis('Source')\
 		.reset_index()\
 		.melt('Source', value_name='Weight', var_name='Target')\
 		.query('Source != Target')\
 		.reset_index(drop=True)
 	edges = edges[edges["Weight"]!=0]
 
-	mydata = torch_geometric.data.Data(x=torch.tensor(scipy.sparse.csr_matrix(adata.X, dtype="float32").todense()), 
+	mydata = torch_geometric.data.Data(x=torch.tensor(scipy.sparse.csr_matrix(adata.X, dtype="float32").toarray()), 
 						 	 edge_index=torch.tensor(edges[["Source","Target"]].astype(int).to_numpy().T),
-						 	# edge_weight=torch.tensor(edges["Weight"].astype("float32").to_numpy()),
 						 	 y=torch.from_numpy(adata.obs["target"].to_numpy().astype(int)).type(torch.LongTensor))
 	mydata.num_features = mydata.x.shape[1]
 	mydata.num_classes = len(set(np.array(mydata.y)))
