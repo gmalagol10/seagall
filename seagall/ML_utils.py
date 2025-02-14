@@ -8,7 +8,6 @@ import sklearn
 import torch
 import torch_geometric
 device = 'cpu'
-print(f"Global MLU --> Device is {device}")
 
 class GAT(torch.nn.Module):
 
@@ -206,14 +205,12 @@ def GAT_1_step_training(model, train_loader, optimizer, criterion):
 	device = 'cpu'
 	train_loss=0
 	train_f1w=0
-	print(f"MLU.GAT_1_step_training before for batch in train_loader --> Device is {device}")
 	for batch in train_loader:
 		optimizer.zero_grad()
 		batch = batch.to(device)
 		out = model(batch.x, batch.edge_index)[:batch.batch_size].to(device)
 
 		# NOTE Only consider predictions and labels of seed nodes:
-		print(f"MLU.GAT_1_step_training before criterion(out, y) --> Device is {device}")
 		y = batch.y[:batch.batch_size].to(device)
 		loss_batch = criterion(out, y)
 		loss_batch.backward()
@@ -301,7 +298,6 @@ def GAT_train_node_classifier(model, data, optimizer, criterion, model_name, epo
 	train_loader = torch_geometric.loader.NeighborLoader(data, input_nodes=data.train_mask, num_neighbors=[3,2], batch_size=128, directed=False, shuffle=True)
 	val_loader = torch_geometric.loader.NeighborLoader(data, input_nodes=data.val_mask, num_neighbors=[3,2], batch_size=64, directed=False, shuffle=True)
 	
-	print(f"MLU.GAT_train_node_classifier before mlu.GAT_1_step_training --> Device is {device}")
 	for epoch in range(1, epochs + 1):
 		### Training
 		train_loss, train_f1w = GAT_1_step_training(model, train_loader, optimizer, criterion)

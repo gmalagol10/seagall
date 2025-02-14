@@ -24,7 +24,6 @@ from pathlib import Path
 
 torch.manual_seed(np.random.randint(0,10000))
 device = 'cpu'
-print(f"Global EE --> Device is {device}")
 
 def GeometricalEmbedding(M, y=None, epochs=300, model_name="SeagallGRAE"):
 	'''
@@ -96,7 +95,7 @@ def embbedding_and_graph(adata, y=None, layer="X", model_name="SeagallGRAE", par
 
 
 def classify_and_explain(adata, label, path, hypopt=False, n_feat=50):
-	print(f"EE.classify_and_explain --> Device is {device}")
+
 	'''
 	Function to extract the relevant features
 
@@ -164,7 +163,6 @@ def classify_and_explain(adata, label, path, hypopt=False, n_feat=50):
 		
 		mydata = torch_geometric.transforms.RandomNodeSplit(num_val=0.15, num_test=0.15)(mydata)
 		model = mlu.GAT(n_feats=mydata.num_features, n_classes=mydata.num_classes, dim_h=best_params["dim_h"], heads=best_params["heads"]).to(device)
-		print("Model", model)
 		optimizer_model = torch.optim.Adam(model.parameters(), lr=best_params["lr"], weight_decay=best_params["weight_decay"])
 
 	else:
@@ -172,13 +170,11 @@ def classify_and_explain(adata, label, path, hypopt=False, n_feat=50):
 		xai_path = f"{path}/Seagal_{label}"
 		mydata = torch_geometric.transforms.RandomNodeSplit(num_val=0.15, num_test=0.15)(mydata)
 		model = mlu.GAT(n_feats=mydata.num_features, n_classes=mydata.num_classes).to(device)
-		print("Model", model)
 		optimizer_model = torch.optim.Adam(model.parameters(), lr=1e-3, weight_decay=1e-3)
 
 	class_weights = sklearn.utils.class_weight.compute_class_weight(class_weight='balanced',classes=np.unique(mydata.y), y=mydata.y.numpy())
 	criterion = torch.nn.CrossEntropyLoss(weight=torch.tensor(class_weights, dtype=torch.float), reduction="mean")
 
-	print(f"EE.classify_and_explain before mlu.GAT_train_node_classifier --> Device is {device}")
 	print(time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()), "Training model", flush=True)					
 	model, history = mlu.GAT_train_node_classifier(model, mydata, optimizer_model, criterion, f"{xai_path}_Model.pth", epochs=500, patience=50)
 

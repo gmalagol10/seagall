@@ -11,7 +11,6 @@ import torch
 import torch_geometric
 
 device = 'cpu'
-print(f"Global HPO --> Device is {device}")
 # ++++++++++++++++++++++++++++++ GAT
 def HPO_TrainModel_GAT(model, data, model_name, trial, param, epochs=250):
 
