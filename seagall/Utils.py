@@ -62,6 +62,7 @@ def create_count_matrix(fragments_file : str, valid_bcs : list, features_space :
 			adata = epi.ct.peak_mtx(fragments_file=fragments_file, peak_file=features_file, valid_bcs=valid_bcs, normalized_peak_size=None, fast=False)
 			adata.var.index=["_".join([str(adata.var.iloc[i][0]),str(adata.var.iloc[i][1]),str(adata.var.iloc[i][2])]) for i in range(len(adata.var.index))]
 	
+	adata.var_names_make_unique()
 	adata.X=scipy.sparse.csr_matrix(adata.X, dtype="float32")
 	adata.var.columns = adata.var.columns.astype(str)
 	adata.obs.columns = adata.obs.columns.astype(str)
