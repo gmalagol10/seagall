@@ -172,6 +172,7 @@ def classify_and_explain(adata, label, path, hypopt=False, n_feat=50):
 		xai_path = f"{path}/Seagal_{label}"
 		mydata = torch_geometric.transforms.RandomNodeSplit(num_val=0.15, num_test=0.15)(mydata)
 		model = mlu.GAT(n_feats=mydata.num_features, n_classes=mydata.num_classes).to(device)
+		print("Model", model)
 		optimizer_model = torch.optim.Adam(model.parameters(), lr=1e-3, weight_decay=1e-3)
 
 	class_weights = sklearn.utils.class_weight.compute_class_weight(class_weight='balanced',classes=np.unique(mydata.y), y=mydata.y.numpy())
