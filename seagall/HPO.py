@@ -9,7 +9,7 @@ from . import ML_utils as mlu
 import optuna
 import torch
 import torch_geometric
-from torcheval import metrics
+
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # ++++++++++++++++++++++++++++++ GAT
