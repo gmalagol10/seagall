@@ -214,7 +214,7 @@ def GAT_1_step_training(model, train_loader, optimizer, criterion):
 
 		# NOTE Only consider predictions and labels of seed nodes:
 		print(f"MLU.GAT_1_step_training before criterion(out, y) --> Device is {device}")
-		y = batch.y[:batch.batch_size]
+		y = batch.y[:batch.batch_size].to(device)
 		loss_batch = criterion(out, y)
 		loss_batch.backward()
 		optimizer.step()
@@ -254,7 +254,7 @@ def GAT_validation(model, val_loader, optimizer, criterion):
 			batch = batch.to(device)
 			out = model(batch.x, batch.edge_index)[:batch.batch_size]
 		
-			y = batch.y[:batch.batch_size]
+			y = batch.y[:batch.batch_size].to(device)
 			loss_batch = criterion(out, y)
 			val_loss += loss_batch.item()
 			val_f1w += sklearn.metrics.precision_recall_fscore_support(out.argmax(dim=1).detach().numpy(), y.detach().numpy(), average="weighted")[2]
