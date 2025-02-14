@@ -23,7 +23,7 @@ from . import HPO as hpo
 from pathlib import Path
 
 torch.manual_seed(np.random.randint(0,10000))
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+device = 'cpu'
 print(f"Global EE --> Device is {device}")
 
 def GeometricalEmbedding(M, y=None, epochs=300, model_name="SeagallGRAE"):

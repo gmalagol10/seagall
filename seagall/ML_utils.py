@@ -7,7 +7,7 @@ import sklearn
 
 import torch
 import torch_geometric
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+device = 'cpu'
 print(f"Global MLU --> Device is {device}")
 
 class GAT(torch.nn.Module):
@@ -203,7 +203,7 @@ def GAT_1_step_training(model, train_loader, optimizer, criterion):
 
 	'''
 
-	device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+	device = 'cpu'
 	train_loss=0
 	train_f1w=0
 	print(f"MLU.GAT_1_step_training before for batch in train_loader --> Device is {device}")
@@ -246,7 +246,7 @@ def GAT_validation(model, val_loader, optimizer, criterion):
 	
 	'''
 		
-	device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+	device = 'cpu'
 	val_f1w=0
 	val_loss=0
 	with torch.no_grad(): 

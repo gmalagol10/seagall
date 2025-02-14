@@ -10,7 +10,7 @@ import optuna
 import torch
 import torch_geometric
 
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+device = 'cpu'
 print(f"Global HPO --> Device is {device}")
 # ++++++++++++++++++++++++++++++ GAT
 def HPO_TrainModel_GAT(model, data, model_name, trial, param, epochs=250):
