@@ -12,6 +12,7 @@ import scipy
 
 import torch
 import torch_geometric
+import torch.nn as nn
 
 import grae
 from grae.models import GRAE
@@ -24,6 +25,7 @@ from pathlib import Path
 
 torch.manual_seed(np.random.randint(0,10000))
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
 
 def GeometricalEmbedding(M, y=None, epochs=300, model_name="SeagallGRAE"):
 	'''
@@ -82,12 +84,7 @@ def embbedding_and_graph(adata, y=None, layer="X", model_name="SeagallGRAE", par
 
 	'''
 	
-	if layer == "X":
-		M=adata.X.copy()
-	else:
-		M=adata.layers[layer].copy()
-	
-	Z = GeometricalEmbedding(M, y=y, model_name=model_name)
+	Z = GeometricalEmbedding(adata=adata, y=y, model_name=model_name, layer=layer)
 	ad_ret=sc.AnnData(Z[0])
 	sc.pp.neighbors(ad_ret, use_rep="X", method="umap")
 
