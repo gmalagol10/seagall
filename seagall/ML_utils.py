@@ -6,6 +6,7 @@ import random
 import sklearn
 
 import torch
+import torch.nn as nn
 import torch_geometric
 
 def split_train_val_GR_AE(X, E, y, train_size=0.85, test_size=0.15, train_batch_size=128, val_batch_size=64):
