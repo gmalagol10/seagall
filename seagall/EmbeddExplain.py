@@ -54,8 +54,8 @@ def GeometricalEmbedding(M, y=None, epochs=300, model_name="SeagallGRAE"):
 		y=np.ones(shape=(M.shape[0],))		
 	
 	M = scipy.sparse.csr_matrix(M, dtype="float32").todense()
-	m = GRAE(epochs=300, patience=20, n_components=int(M.shape[1]**(1/3)))
-	temp=grae.data.base_dataset.BaseDataset(M, y, "none", 0.85, 42, y)
+#	m = GRAE(epochs=300, patience=20, n_components=int(M.shape[1]**(1/3)))
+#	temp=grae.data.base_dataset.BaseDataset(M, y, "none", 0.85, 42, y)
 	m.fit(temp)
 	m.save(f"{model_name}.pth")
 	return m.transform(temp), scipy.sparse.csr_matrix(m.inverse_transform(m.transform(temp)), dtype="float32")
