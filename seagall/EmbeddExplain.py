@@ -24,6 +24,7 @@ from pathlib import Path
 
 torch.manual_seed(np.random.randint(0,10000))
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+print(f"Global EE --> Device is {device}")
 
 def GeometricalEmbedding(M, y=None, epochs=300, model_name="SeagallGRAE"):
 	'''
@@ -95,7 +96,7 @@ def embbedding_and_graph(adata, y=None, layer="X", model_name="SeagallGRAE", par
 
 
 def classify_and_explain(adata, label, path, hypopt=False, n_feat=50):
-
+	print(f"EE.classify_and_explain --> Device is {device}")
 	'''
 	Function to extract the relevant features
 
@@ -175,6 +176,7 @@ def classify_and_explain(adata, label, path, hypopt=False, n_feat=50):
 	class_weights = sklearn.utils.class_weight.compute_class_weight(class_weight='balanced',classes=np.unique(mydata.y), y=mydata.y.numpy())
 	criterion = torch.nn.CrossEntropyLoss(weight=torch.tensor(class_weights, dtype=torch.float), reduction="mean")
 
+	print(f"EE.classify_and_explain before mlu.GAT_train_node_classifier --> Device is {device}")
 	print(time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()), "Training model", flush=True)					
 	model, history = mlu.GAT_train_node_classifier(model, mydata, optimizer_model, criterion, f"{xai_path}_Model.pth", epochs=500, patience=50)
 
