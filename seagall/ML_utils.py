@@ -210,7 +210,7 @@ def GAT_1_step_training(model, train_loader, optimizer, criterion):
 	for batch in train_loader:
 		optimizer.zero_grad()
 		batch = batch.to(device)
-		out = model(batch.x, batch.edge_index)[:batch.batch_size]
+		out = model(batch.x, batch.edge_index)[:batch.batch_size].to(device)
 
 		# NOTE Only consider predictions and labels of seed nodes:
 		print(f"MLU.GAT_1_step_training before criterion(out, y) --> Device is {device}")
@@ -252,7 +252,7 @@ def GAT_validation(model, val_loader, optimizer, criterion):
 	with torch.no_grad(): 
 		for batch in val_loader:
 			batch = batch.to(device)
-			out = model(batch.x, batch.edge_index)[:batch.batch_size]
+			out = model(batch.x, batch.edge_index)[:batch.batch_size].to(device)
 		
 			y = batch.y[:batch.batch_size].to(device)
 			loss_batch = criterion(out, y)
