@@ -132,7 +132,7 @@ def objective_GAT(trial, data, model, model_name):
 	'''	
 	params = {'lr': trial.suggest_loguniform('lr', 1e-4, 1e-1), 'weight_decay': trial.suggest_loguniform('weight_decay', 1e-4, 1e-1)}
 	model = build_GAT(trial, data)
-	f1w = HPO_TrainModel_GAT(model=model, data=data, model_name=model_name, trial=trial, param=params, GAT="GAT")
+	f1w = HPO_TrainModel_GAT(model=model, data=data, model_name=model_name, trial=trial, param=params)
 	
 	return f1w
 
