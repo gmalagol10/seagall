@@ -142,7 +142,7 @@ def classify_and_explain(adata, label, path, hypopt=1, n_feat=50):
 
 		if os.path.isfile(f"{xai_path}.json") == False:
 			print(time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()), "No HPO .json found --> Running HPO using {hypopt} of the cells", flush=True)
-			mydata = mod.create_dataset(adata, label, "GRAE_graph", size)
+			mydata = mlu.create_dataset(adata, label, "GRAE_graph", size)
 			mydata = torch_geometric.transforms.RandomNodeSplit(num_val=0.2, num_test=0)(mydata)
 			study = hpo.run_HPO_GAT(mydata, xai_path)
 			
@@ -153,7 +153,7 @@ def classify_and_explain(adata, label, path, hypopt=1, n_feat=50):
 			print(time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()), "HPO .json found", flush=True)
 			best_params = json.load(open(f"{xai_path}.json", "r"))
 		
-		mydata = mod.create_dataset(adata, label, "GRAE_graph")
+		mydata = mlu.create_dataset(adata, label, "GRAE_graph")
 		mydata = torch_geometric.transforms.RandomNodeSplit(num_val=0.15, num_test=0.15)(mydata)
 		model = mlu.GAT(n_feats=mydata.num_features, n_classes=mydata.num_classes, dim_h=best_params["dim_h"], heads=best_params["heads"]).to(device)
 		optimizer_model = torch.optim.Adam(model.parameters(), lr=best_params["lr"], weight_decay=best_params["weight_decay"])
@@ -161,7 +161,7 @@ def classify_and_explain(adata, label, path, hypopt=1, n_feat=50):
 	else:
 		print(time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()), "Skipping HPO", flush=True)
 		xai_path = f"{path}/Seagal_{label}"
-		mydata = mod.create_dataset(adata, label, "GRAE_graph")
+		mydata = mlu.create_dataset(adata, label, "GRAE_graph")
 		mydata = torch_geometric.transforms.RandomNodeSplit(num_val=0.15, num_test=0.15)(mydata)
 		model = mlu.GAT(n_feats=mydata.num_features, n_classes=mydata.num_classes).to(device)
 		optimizer_model = torch.optim.Adam(model.parameters(), lr=1e-3, weight_decay=1e-3)
