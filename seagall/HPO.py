@@ -56,12 +56,12 @@ def HPO_TrainModel_GAT(model, data, model_name, trial, param):
 		val_loss, val_f1w = mlu.GAT_validation(model, val_loader, optimizer, criterion)
 		
 		if epoch % 10 == 0:
-			print(f"Validation loss {val_loss:.3f}", flush=True)
+			print(f"Epoch {epoch} | Validation loss {val_loss:.3f} | Validation F1 {val_f1w:.3f}", flush=True)
 
-		trial.report(val_loss, epoch)
+		trial.report(val_f1w, epoch)
 		if trial.should_prune():
 			raise optuna.exceptions.TrialPruned()
-		return val_loss
+		return val_f1w
 
 def build_GAT(trial, data):
 
