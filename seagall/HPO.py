@@ -61,7 +61,8 @@ def HPO_TrainModel_GAT(model, data, model_name, trial, param):
 		trial.report(val_f1w, epoch)
 		if trial.should_prune():
 			raise optuna.exceptions.TrialPruned()
-		return val_f1w
+	
+	return val_f1w
 
 def build_GAT(trial, data):
 
