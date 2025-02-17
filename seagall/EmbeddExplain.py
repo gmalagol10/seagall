@@ -134,6 +134,7 @@ def classify_and_explain(adata, label, path, hypopt=1, n_feat=50):
 
 	Path(f"{path}/Seagal_{label}").mkdir(parents=True, exist_ok=True)
 
+	adata.var_names_make_unique()
 	mymap = dict([(y,str(x)) for x,y in enumerate(sorted(set(adata.obs[label])))])
 	inv_map = {v: k for k, v in mymap.items()}
 	adata.uns["map"]=mymap
