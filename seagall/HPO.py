@@ -146,6 +146,6 @@ def run_HPO_GAT(data, model_name):
 	study.optimize(obejctive, n_trials=50, n_jobs=5, gc_after_trial=True)
 
 	for key, value in study.best_trial.params.items():
-		print("Best value for {key} is {value}\n")	
+		print(f"Best value for {key} is {value}\n")	
 
 	return study
