@@ -5,7 +5,6 @@ pandas==1.5.3
 episcanpy
 torch==2.6.0
 torch_geometric==2.5.2
-torch-sparse
 torchvision
 phate
 scikit-learn
