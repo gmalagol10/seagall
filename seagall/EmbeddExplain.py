@@ -142,7 +142,7 @@ def classify_and_explain(adata, label, path, hypopt=1, n_feat=50):
 
 		if os.path.isfile(f"{xai_path}.json") == False:
 			print(time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()), "No HPO .json found --> Running HPO using {hypopt} of the cells", flush=True)
-			mydata = mlu.create_pyg_dataset(adata, label, "GRAE_graph", size)
+			mydata = mlu.create_pyg_dataset(adata, label, "GRAE_graph", hypopt)
 			mydata = torch_geometric.transforms.RandomNodeSplit(num_val=0.2, num_test=0)(mydata)
 			study = hpo.run_HPO_GAT(mydata, xai_path)
 			
