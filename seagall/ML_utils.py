@@ -16,7 +16,7 @@ class GAT(torch.nn.Module):
 	See https://pytorch-geometric.readthedocs.io/en/2.5.1/generated/torch_geometric.nn.conv.GATv2Conv.html for the details 
 
  	Parameters
-    ----------
+	----------
 
 	n_classes : number of classes in the dataset
 	
@@ -53,7 +53,7 @@ def split_train_val(X, y, train_size=0.85, val_size=0.15, train_batch_size=128, 
 	Function to split the dataset in train and validation set with batches
 
  	Parameters
-    ----------
+	----------
 
 	X : N * F matrix with N cells and F features
 	
@@ -109,7 +109,7 @@ def split_train_val_test(X, y, train_size=0.7, val_size=0.1, test_size=0.2, trai
 	Function to split the dataset in train, validation and test set with batches for the training and the validation
 
  	Parameters
-    ----------
+	----------
 
 	X : N * F matrix with N cells and F features
 	
@@ -178,32 +178,29 @@ def split_train_val_test(X, y, train_size=0.7, val_size=0.1, test_size=0.2, trai
 
 def create_pyg_dataset(adata, label, graph, size=1):
 	print(f"Creating pyg dataset based on AnnData object with target label {label} and graph {graph}. Subsamplig a fraction of {size} of the cells", flush=True)
-    if size < 1 and size > 0:
-        ad=adata[np.random.randint(0, len(adata), int(np.around(adata.shape[0]*size, decimals=0))), :].copy()
-    elif size == 0:
-        raise ValueError(f"Size can't be {size}")
-    else:
-        ad=adata.copy()
-    mymap = dict([(y,str(x)) for x,y in enumerate(sorted(set(ad.obs[label])))])
-    inv_map = {v: k for k, v in mymap.items()}
-    ad.uns["map"]=mymap
-    ad.uns["inv_map"]=inv_map
-    ad.obs["target"]=[mymap[x] for x in ad.obs[label]]
-    
-    edges = pd.DataFrame(ad.obsp[graph].toarray()).rename_axis('Source')\
-        .reset_index()\
-        .melt('Source', value_name='Weight', var_name='Target')\
-        .query('Source != Target')\
-        .reset_index(drop=True)
-    edges = edges[edges["Weight"]!=0]
-    
-    mydata = torch_geometric.data.Data(x=torch.tensor(scipy.sparse.csr_matrix(ad.X, dtype="float32").toarray()), 
-                             edge_index=torch.tensor(edges[["Source","Target"]].astype(int).to_numpy().T),
-                             y=torch.from_numpy(ad.obs["target"].to_numpy().astype(int)).type(torch.LongTensor))
-    mydata.num_features = mydata.x.shape[1]
-    mydata.num_classes = len(set(np.array(mydata.y)))
-    del ad
-    return mydata
+	if size < 1 and size > 0:
+		ad=adata[np.random.randint(0, len(adata), int(np.around(adata.shape[0]*size, decimals=0))), :].copy()
+	elif size == 0:
+		raise ValueError(f"Size can't be {size}")
+	else:
+		ad=adata.copy()
+	mymap = dict([(y,str(x)) for x,y in enumerate(sorted(set(ad.obs[label])))])
+	inv_map = {v: k for k, v in mymap.items()}
+	ad.uns["map"]=mymap
+	ad.uns["inv_map"]=inv_map
+	ad.obs["target"]=[mymap[x] for x in ad.obs[label]]
+	
+	edges = pd.DataFrame(ad.obsp[graph].toarray()).rename_axis('Source').reset_index().melt('Source', value_name='Weight', var_name='Target')\
+		.query('Source != Target').reset_index(drop=True)
+	edges = edges[edges["Weight"]!=0]
+	
+	mydata = torch_geometric.data.Data(x=torch.tensor(scipy.sparse.csr_matrix(ad.X, dtype="float32").toarray()), 
+							 edge_index=torch.tensor(edges[["Source","Target"]].astype(int).to_numpy().T),
+							 y=torch.from_numpy(ad.obs["target"].to_numpy().astype(int)).type(torch.LongTensor))
+	mydata.num_features = mydata.x.shape[1]
+	mydata.num_classes = len(set(np.array(mydata.y)))
+	del ad
+	return mydata
 	
 # ++++++++++++++++++++++++++++++ TRAIN GATs
 
@@ -213,7 +210,7 @@ def GAT_1_step_training(model, train_loader, optimizer, criterion):
 	Apply one iteration of GAT's training
 
  	Parameters
-    ----------
+	----------
 
 	model : object of class torch.nn.Module
 	
@@ -254,7 +251,7 @@ def GAT_validation(model, val_loader, optimizer, criterion):
 	Apply one iteration of GAT's validation
 
  	Parameters
-    ----------
+	----------
 
 	model : object of class torch.nn.Module
 	
@@ -292,7 +289,7 @@ def GAT_train_node_classifier(model, data, optimizer, criterion, model_name, epo
 	Complete funciton to train the GAT
 
  	Parameters
-    ----------
+	----------
 
 	model : object of class torch.nn.Module
 	
