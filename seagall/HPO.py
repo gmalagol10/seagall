@@ -127,8 +127,7 @@ def run_HPO_GAT(data, model_name):
  	Parameters
     ----------
 
-	data : object of class torch_geometric.data.Data storing thw whole count matrix. See EmbeddExplain.classify_and_explain to see how the data object is built
-	
+	data : object of class torch_geometric.data.Data storing thw whole count matrix. See Ml_utils.create_pyg_dataset for the building of the data object
 	model_name : name to use to save the model during the training
 
 	Output
@@ -146,6 +145,6 @@ def run_HPO_GAT(data, model_name):
 	study.optimize(obejctive, n_trials=50, n_jobs=5, gc_after_trial=True)
 
 	for key, value in study.best_trial.params.items():
-		print(f"Best value for {key} is {value}\n")	
+		print(f"Best value for {key} is {value}")	
 
 	return study

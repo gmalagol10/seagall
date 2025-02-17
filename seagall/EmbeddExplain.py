@@ -162,7 +162,7 @@ def classify_and_explain(adata, label, path, hypopt=1, n_feat=50):
 			print(time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()), "HPO .json found", flush=True)
 			best_params = json.load(open(f"{xai_path}.json", "r"))
 			for key, value in best_params.items():
-				print(f"Best value for {key} is {value}\n", flush=True)	
+				print(f"Best value for {key} is {value}", flush=True)	
 		
 		print(time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()), "Creating dataset", flush=True)
 		mydata = mlu.create_pyg_dataset(adata, label, "GRAE_graph")
