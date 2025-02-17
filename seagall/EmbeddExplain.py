@@ -58,7 +58,7 @@ def GeometricalEmbedding(M, y=None, epochs=300, patience=20, train_size=0.85, mo
 		y=np.ones(shape=(M.shape[0],))		
 	
 	M = scipy.sparse.csr_matrix(M, dtype="float32").toarray()
-	m = GRAE(epochs=epochs, patience=patience, n_components=int(np.around(M.shape[1]**(1/3), decimals=0))
+	m = GRAE(epochs=epochs, patience=patience, n_components=int(np.around(M.shape[1]**(1/3), decimals=0)))
 	temp=grae.data.base_dataset.BaseDataset(M, y, "none", train_size, 42, y)
 	m.fit(temp)
 	m.save(f"{model_name}.pth")
@@ -106,7 +106,7 @@ def embbedding_and_graph(adata, y=None, layer="X", epochs=300, patience=20, trai
 	adata.obsp[f"GRAE_graph"], adata.obsm["GRAE_latent_space"], adata.layers[f"GRAE_decoded_matrix"],  = scipy.sparse.csr_matrix(ad_ret.obsp["connectivities"], dtype="float32"), Z[0], Z[1]
 
 
-def classify_and_explain(adata, label, path, hypopt=False, n_feat=50):
+def classify_and_explain(adata, label, path, hypopt=1, n_feat=50):
 
 	'''
 	Function to extract the relevant features
@@ -120,7 +120,7 @@ def classify_and_explain(adata, label, path, hypopt=False, n_feat=50):
 
 	path : path where to save the results
 
-	hypopt : whether to apply hyperparameter optimization to the GAT classifier, default = True
+	hypopt : fraction of cells to use to run HPO, default 1 (all the cells) 0 for not run it
 
 	n_feat : number of to extract, default = 50. Anyway it will be saved a file with the importance of each feature for each cell
 
@@ -156,12 +156,12 @@ def classify_and_explain(adata, label, path, hypopt=False, n_feat=50):
 	mydata.num_features = mydata.x.shape[1]
 	mydata.num_classes = len(set(np.array(mydata.y)))
 
-	if hypopt != False:
-		print(time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()), "Starting HPO", flush=True)	
+	if hypopt > 0:
+		print(time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()), "Looking for HPO file", flush=True)	
 		xai_path = f"{path}/Seagal_{label}_HPO"
 
 		if os.path.isfile(f"{xai_path}.json") == False:
-			print(time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()), "No HPO .json found --> Running HPO", flush=True)	
+			print(time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()), "No HPO .json found --> Running HPO  using {hypopt} of the cells", flush=True)	
 			mydata = torch_geometric.transforms.RandomNodeSplit(num_val=0.2, num_test=0)(mydata)
 			study = hpo.run_HPO_GAT(mydata, xai_path)
 			
