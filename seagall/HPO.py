@@ -144,5 +144,8 @@ def run_HPO_GAT(data, model_name):
 	study = optuna.create_study(direction="maximize", sampler=optuna.samplers.TPESampler(), pruner=optuna.pruners.MedianPruner(), 
 							study_name=model_name, storage=storage_name, load_if_exists=True)
 	study.optimize(obejctive, n_trials=50, n_jobs=5, gc_after_trial=True)
-	
+
+	for key, value in study.best_trial.params.items():
+		print("Best value for {key} is {value}\n")	
+
 	return study
