@@ -185,11 +185,6 @@ def create_pyg_dataset(adata, label, graph, size=1):
 		raise ValueError(f"Size can't be {size}")
 	else:
 		ad=adata.copy()
-	mymap = dict([(y,str(x)) for x,y in enumerate(sorted(set(ad.obs[label])))])
-	inv_map = {v: k for k, v in mymap.items()}
-	ad.uns["map"]=mymap
-	ad.uns["inv_map"]=inv_map
-	ad.obs["target"]=[mymap[x] for x in ad.obs[label]]
 	
 	edges = pd.DataFrame(ad.obsp[graph].toarray()).rename_axis('Source').reset_index().melt('Source', value_name='Weight', var_name='Target')\
 		.query('Source != Target').reset_index(drop=True)

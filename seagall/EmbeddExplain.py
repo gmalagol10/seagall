@@ -133,9 +133,13 @@ def classify_and_explain(adata, label, path, hypopt=1, n_feat=50):
 	'''
 
 	Path(f"{path}/Seagal_{label}").mkdir(parents=True, exist_ok=True)
-		
-	print(time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()), f"Creating dataset", flush=True)
 
+	mymap = dict([(y,str(x)) for x,y in enumerate(sorted(set(ad.obs[label])))])
+	inv_map = {v: k for k, v in mymap.items()}
+	ad.uns["map"]=mymap
+	ad.uns["inv_map"]=inv_map
+	ad.obs["target"]=[mymap[x] for x in ad.obs[label]]
+		
 	if hypopt > 0:
 		print(time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()), "Looking for HPO file", flush=True)
 		xai_path = f"{path}/Seagal_{label}_HPO"
@@ -153,13 +157,14 @@ def classify_and_explain(adata, label, path, hypopt=1, n_feat=50):
 			print(time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()), "HPO .json found", flush=True)
 			best_params = json.load(open(f"{xai_path}.json", "r"))
 		
+		print(time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()), f"Creating dataset", flush=True)
 		mydata = mlu.create_pyg_dataset(adata, label, "GRAE_graph")
 		mydata = torch_geometric.transforms.RandomNodeSplit(num_val=0.15, num_test=0.15)(mydata)
 		model = mlu.GAT(n_feats=mydata.num_features, n_classes=mydata.num_classes, dim_h=best_params["dim_h"], heads=best_params["heads"]).to(device)
 		optimizer_model = torch.optim.Adam(model.parameters(), lr=best_params["lr"], weight_decay=best_params["weight_decay"])
 
 	else:
-		print(time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()), "Skipping HPO", flush=True)
+		print(time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()), f"Creating dataset, no HPO", flush=True)
 		xai_path = f"{path}/Seagal_{label}"
 		mydata = mlu.create_pyg_dataset(adata, label, "GRAE_graph")
 		mydata = torch_geometric.transforms.RandomNodeSplit(num_val=0.15, num_test=0.15)(mydata)
