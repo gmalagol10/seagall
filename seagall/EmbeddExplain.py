@@ -226,28 +226,13 @@ def classify_and_explain(adata, label, path, hypopt=1, n_feat=50):
 	del df_imp, a
 
 
-	a=pd.DataFrame(explanation.node_mask, index=adata.obs.index, columns=adata.var.index)
-	df_feat=pd.DataFrame()
-	df_imp=pd.DataFrame()
-	for ct in sorted(list(set(adata.obs[label]))):
-		print(ct)
-		b=pd.DataFrame(a.loc[adata.obs[adata.obs[label]==ct].index])
-		df_imp=pd.concat([df_imp, pd.DataFrame(b.mean().sort_values(ascending=False)[:int(n_feat)].to_numpy())[0]], axis=1)
-		df_feat=pd.concat([df_feat, pd.DataFrame(b.mean().sort_values(ascending=False)[:int(n_feat)].index)], axis=1)
-	df_feat.columns=sorted(list(set(adata.obs[label])))
-	df_imp.columns=sorted(list(set(adata.obs[label])))
-
-	a.to_csv(f"{xai_path}_Top{str(n_feat)}FeatImpCM.tsv.gz", sep="\t", compression="gzip")
-	df_feat.to_csv(f"{xai_path}_Top{str(n_feat)}Features.tsv.gz", sep="\t", compression="gzip")
-	df_imp.to_csv(f"{xai_path}_Top{str(n_feat)}FeaturesImportance.tsv.gz", sep="\t", compression="gzip")
-	del df_imp, a
-
-
 	jc=pd.DataFrame(index=df_feat.columns, columns=df_feat.columns)
 	for column in jc.columns:
 		for col in jc.columns:
 			if len(df_feat[column].dropna())==0 or len(df_feat[col].dropna())==0:
 				print("Problem with either {column} or {col}")
 			else:	
-				jc.at[column, col]=len(ut.intersection([df_feat[column].dropna(), df_feat[col].dropna()]))/len(ut.flat_list([df_feat[column].dropna(), df_feat[col].dropna()]))
+				fsi=df_feat[column].dropna()[:int(n_feat)]
+				fsj=df_feat[col].dropna()[:int(n_feat)]
+				jc.at[column, col]=len(ut.intersection([fsi, fsj]))/len(ut.flat_list([fsi, fsj]))
 	jc.to_csv(f"{xai_path}_Top{str(n_feat)}Features_Jaccard.tsv.gz", sep="\t", compression="gzip")
