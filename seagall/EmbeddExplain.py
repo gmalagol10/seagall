@@ -1,3 +1,6 @@
+import warnings
+warnings.filterwarnings("ignore")
+
 import numpy as np
 import pandas as pd
 import scanpy as sc
@@ -132,7 +135,8 @@ def classify_and_explain(adata, label, path, hypopt=1, n_feat=50):
 
 	'''
 
-	Path(f"{path}/Seagal_{label}").mkdir(parents=True, exist_ok=True)
+	path=f"{path}/Seagal_{label}"
+	Path(path).mkdir(parents=True, exist_ok=True)
 
 	adata.var_names_make_unique()
 	mymap = dict([(y,str(x)) for x,y in enumerate(sorted(set(adata.obs[label])))])

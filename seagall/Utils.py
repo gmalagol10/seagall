@@ -1,3 +1,6 @@
+import warnings
+warnings.filterwarnings("ignore")
+
 import episcanpy as epi
 import scanpy as sc
 import numpy as np
