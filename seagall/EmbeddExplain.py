@@ -134,51 +134,34 @@ def classify_and_explain(adata, label, path, hypopt=1, n_feat=50):
 
 	Path(f"{path}/Seagal_{label}").mkdir(parents=True, exist_ok=True)
 		
-	print(time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()), f"Creating dataset", flush=True)					
-
-	adata = adata[adata.obs[label].dropna().index]
-	mymap = dict([(y,str(x)) for x,y in enumerate(sorted(set(adata.obs[label])))])
-	inv_map = {v: k for k, v in mymap.items()}
-	adata.uns["map"]=mymap
-	adata.uns["inv_map"]=inv_map
-	adata.obs["target"]=[mymap[x] for x in adata.obs[label]]
-
-	edges = pd.DataFrame(adata.obsp["GRAE_graph"].toarray()).rename_axis('Source')\
-		.reset_index()\
-		.melt('Source', value_name='Weight', var_name='Target')\
-		.query('Source != Target')\
-		.reset_index(drop=True)
-	edges = edges[edges["Weight"]!=0]
-
-	mydata = torch_geometric.data.Data(x=torch.tensor(scipy.sparse.csr_matrix(adata.X, dtype="float32").toarray()), 
-						 	 edge_index=torch.tensor(edges[["Source","Target"]].astype(int).to_numpy().T),
-						 	 y=torch.from_numpy(adata.obs["target"].to_numpy().astype(int)).type(torch.LongTensor))
-	mydata.num_features = mydata.x.shape[1]
-	mydata.num_classes = len(set(np.array(mydata.y)))
+	print(time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()), f"Creating dataset", flush=True)
 
 	if hypopt > 0:
-		print(time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()), "Looking for HPO file", flush=True)	
+		print(time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()), "Looking for HPO file", flush=True)
 		xai_path = f"{path}/Seagal_{label}_HPO"
 
 		if os.path.isfile(f"{xai_path}.json") == False:
-			print(time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()), "No HPO .json found --> Running HPO  using {hypopt} of the cells", flush=True)	
+			print(time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()), "No HPO .json found --> Running HPO using {hypopt} of the cells", flush=True)
+			mydata = mod.create_dataset(adata, label, "GRAE_graph", size)
 			mydata = torch_geometric.transforms.RandomNodeSplit(num_val=0.2, num_test=0)(mydata)
 			study = hpo.run_HPO_GAT(mydata, xai_path)
 			
 			with open(f"{xai_path}.json", "w") as f:
-				json.dump(study.best_params, f)	
+				json.dump(study.best_params, f)
 			best_params = study.best_params
 		else:
-			print(time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()), "HPO .json found", flush=True)	
+			print(time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()), "HPO .json found", flush=True)
 			best_params = json.load(open(f"{xai_path}.json", "r"))
 		
+		mydata = mod.create_dataset(adata, label, "GRAE_graph")
 		mydata = torch_geometric.transforms.RandomNodeSplit(num_val=0.15, num_test=0.15)(mydata)
 		model = mlu.GAT(n_feats=mydata.num_features, n_classes=mydata.num_classes, dim_h=best_params["dim_h"], heads=best_params["heads"]).to(device)
 		optimizer_model = torch.optim.Adam(model.parameters(), lr=best_params["lr"], weight_decay=best_params["weight_decay"])
 
 	else:
-		print(time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()), "Skipping HPO", flush=True)	
+		print(time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()), "Skipping HPO", flush=True)
 		xai_path = f"{path}/Seagal_{label}"
+		mydata = mod.create_dataset(adata, label, "GRAE_graph")
 		mydata = torch_geometric.transforms.RandomNodeSplit(num_val=0.15, num_test=0.15)(mydata)
 		model = mlu.GAT(n_feats=mydata.num_features, n_classes=mydata.num_classes).to(device)
 		optimizer_model = torch.optim.Adam(model.parameters(), lr=1e-3, weight_decay=1e-3)
@@ -186,7 +169,7 @@ def classify_and_explain(adata, label, path, hypopt=1, n_feat=50):
 	class_weights = sklearn.utils.class_weight.compute_class_weight(class_weight='balanced',classes=np.unique(mydata.y), y=mydata.y.numpy())
 	criterion = torch.nn.CrossEntropyLoss(weight=torch.tensor(class_weights, dtype=torch.float), reduction="mean")
 
-	print(time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()), "Training model", flush=True)					
+	print(time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()), "Training model", flush=True)
 	model, history = mlu.GAT_train_node_classifier(model, mydata, optimizer_model, criterion, f"{xai_path}_Model.pth", epochs=500, patience=50)
 
 	with open(f"{xai_path}_Model_Progress.json", "w") as f:
@@ -194,7 +177,7 @@ def classify_and_explain(adata, label, path, hypopt=1, n_feat=50):
 	del history
 
 
-	print(time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()), f"Metrics for model's performances", flush=True)				
+	print(time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()), f"Metrics for model's performances", flush=True)
 	model.eval()
 	pred = model(mydata.x, mydata.edge_index).argmax(dim=1)
 
