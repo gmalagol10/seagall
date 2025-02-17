@@ -44,8 +44,6 @@ def HPO_TrainModel_GAT(model, data, model_name, trial, param):
 	optimizer = torch.optim.Adam(model.parameters(), lr=param['lr'], weight_decay=param['weight_decay'])
 	
 	epochs=100
-	best_val_f1w = -1
-	best_epoch = -1
 
 	train_loader = torch_geometric.loader.NeighborLoader(data, input_nodes=data.train_mask, num_neighbors=[3,2], batch_size=128, directed=False, shuffle=True)
 	val_loader = torch_geometric.loader.NeighborLoader(data, input_nodes=data.val_mask, num_neighbors=[3,2], batch_size=64, directed=False, shuffle=True)
@@ -60,10 +58,10 @@ def HPO_TrainModel_GAT(model, data, model_name, trial, param):
 		if epoch % 10 == 0:
 			print(f"Validation loss {val_loss:.3f}", flush=True)
 
-		trial.report(best_val_f1w, epoch)
+		trial.report(val_loss, epoch)
 		if trial.should_prune():
 			raise optuna.exceptions.TrialPruned()
-		return best_val_f1w
+		return val_loss
 
 def build_GAT(trial, data):
 
