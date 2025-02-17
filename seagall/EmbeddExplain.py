@@ -134,11 +134,11 @@ def classify_and_explain(adata, label, path, hypopt=1, n_feat=50):
 
 	Path(f"{path}/Seagal_{label}").mkdir(parents=True, exist_ok=True)
 
-	mymap = dict([(y,str(x)) for x,y in enumerate(sorted(set(ad.obs[label])))])
+	mymap = dict([(y,str(x)) for x,y in enumerate(sorted(set(adata.obs[label])))])
 	inv_map = {v: k for k, v in mymap.items()}
-	ad.uns["map"]=mymap
-	ad.uns["inv_map"]=inv_map
-	ad.obs["target"]=[mymap[x] for x in ad.obs[label]]
+	adata.uns["map"]=mymap
+	adata.uns["inv_map"]=inv_map
+	adata.obs["target"]=[mymap[x] for x in adata.obs[label]]
 		
 	if hypopt > 0:
 		print(time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()), "Looking for HPO file", flush=True)
