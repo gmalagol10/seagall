@@ -150,7 +150,7 @@ def classify_and_explain(adata, label, path, hypopt=1, n_feat=50):
 		xai_path = f"{path}/Seagal_{label}_HPO"
 
 		if os.path.isfile(f"{xai_path}.json") == False:
-			print(time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()), "No HPO .json found --> Running HPO using {hypopt} of the cells", flush=True)
+			print(time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()), f"No HPO .json found --> Running HPO using {hypopt} of the cells", flush=True)
 			mydata = mlu.create_pyg_dataset(adata, label, "GRAE_graph", hypopt)
 			mydata = torch_geometric.transforms.RandomNodeSplit(num_val=0.2, num_test=0)(mydata)
 			study = hpo.run_HPO_GAT(mydata, xai_path)
@@ -162,14 +162,14 @@ def classify_and_explain(adata, label, path, hypopt=1, n_feat=50):
 			print(time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()), "HPO .json found", flush=True)
 			best_params = json.load(open(f"{xai_path}.json", "r"))
 		
-		print(time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()), f"Creating dataset", flush=True)
+		print(time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()), "Creating dataset", flush=True)
 		mydata = mlu.create_pyg_dataset(adata, label, "GRAE_graph")
 		mydata = torch_geometric.transforms.RandomNodeSplit(num_val=0.15, num_test=0.15)(mydata)
 		model = mlu.GAT(n_feats=mydata.num_features, n_classes=mydata.num_classes, dim_h=best_params["dim_h"], heads=best_params["heads"]).to(device)
 		optimizer_model = torch.optim.Adam(model.parameters(), lr=best_params["lr"], weight_decay=best_params["weight_decay"])
 
 	else:
-		print(time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()), f"Creating dataset, no HPO", flush=True)
+		print(time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()), "Creating dataset, no HPO", flush=True)
 		xai_path = f"{path}/Seagal_{label}"
 		mydata = mlu.create_pyg_dataset(adata, label, "GRAE_graph")
 		mydata = torch_geometric.transforms.RandomNodeSplit(num_val=0.15, num_test=0.15)(mydata)
@@ -187,7 +187,7 @@ def classify_and_explain(adata, label, path, hypopt=1, n_feat=50):
 	del history
 
 
-	print(time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()), f"Metrics for model's performances", flush=True)
+	print(time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()), "Metrics for model's performances", flush=True)
 	model.eval()
 	pred = model(mydata.x, mydata.edge_index).argmax(dim=1)
 
@@ -199,7 +199,7 @@ def classify_and_explain(adata, label, path, hypopt=1, n_feat=50):
 	adata.obs.to_csv(f"{xai_path}_Predictions.tsv.gz", sep="\t", compression="gzip")
 
 
-	print(time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()), f"XAI features extraction", flush=True)
+	print(time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()), "XAI features extraction", flush=True)
 	explainer = torch_geometric.explain.Explainer(
 				model=model,
 				algorithm=torch_geometric.explain.GNNExplainer(epochs=200),
