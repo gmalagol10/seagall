@@ -43,8 +43,7 @@ def HPO_TrainModel_GAT(model, data, model_name, trial, param):
 	criterion = torch.nn.CrossEntropyLoss(weight=torch.tensor(class_weights, dtype=torch.float), reduction="mean")
 	optimizer = torch.optim.Adam(model.parameters(), lr=param['lr'], weight_decay=param['weight_decay'])
 	
-	epochs=200
-	patience = 20
+	epochs=100
 	best_val_f1w = -1
 	best_epoch = -1
 
@@ -57,34 +56,14 @@ def HPO_TrainModel_GAT(model, data, model_name, trial, param):
 
 		### Validation
 		val_loss, val_f1w = mlu.GAT_validation(model, val_loader, optimizer, criterion)
+		
+		if epoch % 10 == 0:
+			print(f"Validation loss {val_loss:.3f}", flush=True)
 
-		### Early stopping
-		if val_f1w > best_val_f1w:
-			best_val_f1w = val_f1w
-			best_epoch = epoch
-			torch.save(model.state_dict(), f"{model_name}.pth")
-			print(f"Checkpoint! Best epoch {best_epoch} | Best val loss {val_loss:.3f} | Best val F1W {best_val_f1w:.3f}", flush=True)
-		elif epoch - best_epoch > patience:
-			model.load_state_dict(torch.load(f"{model_name}.pth"))
-			val_loss, best_val_f1w = mlu.GAT_validation(model, val_loader, optimizer, criterion)
-			print(f"Early stopped at epoch {epoch} with best epoch {best_epoch} | Best val loss: {val_loss:.3f} | Best val F1W: {best_val_f1w:.3f}", flush=True)
-			trial.report(best_val_f1w, epoch)
-			if trial.should_prune():
-				raise optuna.exceptions.TrialPruned()
-			return best_val_f1w
-
-		trial.report(val_f1w, epoch)
+		trial.report(best_val_f1w, epoch)
 		if trial.should_prune():
 			raise optuna.exceptions.TrialPruned()
-	
-	model.load_state_dict(torch.load(f"{model_name}.pth"))
-	val_loss, best_val_f1w = mlu.GAT_validation(model, val_loader, optimizer, criterion)
-	
-	trial.report(best_val_f1w, epoch)
-	if trial.should_prune():
-		raise optuna.exceptions.TrialPruned()
-
-	return best_val_f1w
+		return best_val_f1w
 
 def build_GAT(trial, data):
 
@@ -106,8 +85,8 @@ def build_GAT(trial, data):
 
 	'''	
 
-	dim_h = trial.suggest_int('dim_h', low=32, high=256, step=32)
-	heads = trial.suggest_int('heads', low=4, high=12, step=2)
+	dim_h = trial.suggest_int('dim_h', low=32, high=128, step=32)
+	heads = trial.suggest_int('heads', low=4, high=20, step=2)
 	model = mlu.GAT(n_feats=data.num_features, n_classes=data.num_classes, dim_h=dim_h, heads=heads).to(device)
 	
 	return model
