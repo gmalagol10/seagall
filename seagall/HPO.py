@@ -15,7 +15,7 @@ import torch_geometric
 
 device = 'cpu'
 # ++++++++++++++++++++++++++++++ GAT
-def HPO_TrainModel_GAT(model, data, model_name, trial, param, epochs=250):
+def HPO_TrainModel_GAT(model, data, model_name, trial, param):
 
 	'''
 	Operative function to apply HPO
@@ -43,7 +43,8 @@ def HPO_TrainModel_GAT(model, data, model_name, trial, param, epochs=250):
 	criterion = torch.nn.CrossEntropyLoss(weight=torch.tensor(class_weights, dtype=torch.float), reduction="mean")
 	optimizer = torch.optim.Adam(model.parameters(), lr=param['lr'], weight_decay=param['weight_decay'])
 	
-	patience = 30
+	epochs=200
+	patience = 20
 	best_val_f1w = -1
 	best_epoch = -1
 
@@ -133,6 +134,7 @@ def objective_GAT(trial, data, model, model_name):
 	Retruns F1W score
 
 	'''	
+
 	params = {'lr': trial.suggest_float('lr', 1e-4, 1e-1, log=True), 'weight_decay': trial.suggest_float('weight_decay', 1e-4, 1e-1, log=True)}
 	model = build_GAT(trial, data)
 	f1w = HPO_TrainModel_GAT(model=model, data=data, model_name=model_name, trial=trial, param=params)
@@ -157,11 +159,12 @@ def run_HPO_GAT(data, model_name):
 	Returns object of class optuna.study.Study see https://optuna.readthedocs.io/en/stable/reference/generated/optuna.study.Study.html#optuna.study.Study
 	
 	'''
+
 	model=partial(build_GAT, data = data)
 	obejctive=partial(objective_GAT, data = data, model=model, model_name=model_name)
 	storage_name = "sqlite:///{}.db".format(model_name)
 	study = optuna.create_study(direction="maximize", sampler=optuna.samplers.TPESampler(), pruner=optuna.pruners.MedianPruner(), 
 							study_name=model_name, storage=storage_name, load_if_exists=True)
-	study.optimize(obejctive, n_trials=100, n_jobs=1, gc_after_trial=True)
+	study.optimize(obejctive, n_trials=50, n_jobs=3, gc_after_trial=True)
 	
 	return study
