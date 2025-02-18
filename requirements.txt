@@ -1,6 +1,6 @@
 numpy
 numba
-annadata
+anndata
 h5py
 scipy
 pandas
