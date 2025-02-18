@@ -180,16 +180,23 @@ def split_train_val_test(X, y, train_size=0.7, val_size=0.1, test_size=0.2, trai
 
 	return train_dataloader, val_dataloader, test_dataloader
 
-def create_pyg_dataset(adata, label, graph, size=1):
-	print(f"Creating pyg dataset based on AnnData object with target label {label} and graph {graph}. Subsamplig a fraction of {size} of the cells", flush=True)
+def create_pyg_dataset(adata, label, size=1):
+	print(f"Creating pyg dataset based on AnnData object with target label {label} and GRAE's graph. Subsamplig a fraction of {size} of the cells", flush=True)
 	if size < 1 and size > 0:
-		ad=adata[np.random.randint(0, len(adata), int(np.around(adata.shape[0]*size, decimals=0))), :].copy()
+		cells=[]
+		for l in set(adata.obs[label].dropna()):
+			sub_ad=adata[adata.obs[label]==l]
+			sc.pp.subsample(sub_ad, fraction=size)
+			cells.append(sub_ad.obs.index)
+			del sub_ad
+		cells=sgl.ut.flat_list(cells)
+		ad=adata[cells]
 	elif size == 0:
 		raise ValueError(f"Size can't be {size}")
 	else:
 		ad=adata.copy()
 	
-	edges = pd.DataFrame(ad.obsp[graph].toarray()).rename_axis('Source').reset_index().melt('Source', value_name='Weight', var_name='Target')\
+	edges = pd.DataFrame(ad.obsp["GRAE_graph"].toarray()).rename_axis('Source').reset_index().melt('Source', value_name='Weight', var_name='Target')\
 		.query('Source != Target').reset_index(drop=True)
 	edges = edges[edges["Weight"]!=0]
 	
