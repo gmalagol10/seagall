@@ -270,6 +270,7 @@ def GAT_validation(model, val_loader, optimizer, criterion):
 	device = 'cpu'
 	val_f1w=0
 	val_loss=0
+	model.eval()
 	with torch.no_grad(): 
 		for batch in val_loader:
 			batch = batch.to(device)
