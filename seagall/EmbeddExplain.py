@@ -125,7 +125,7 @@ def embbedding_and_graph(adata, label=None, layer="X", epochs=300, patience=20, 
 	adata.obsp[f"GRAE_graph"], adata.obsm["GRAE_latent_space"], adata.layers[f"GRAE_decoded_matrix"]  = scipy.sparse.csr_matrix(ad_ret.obsp["connectivities"], dtype="float32"), Z[0], Z[1]
 
 
-def classify_and_explain(adata, label, path, hypopt=1, n_feat=50, path="SEAGALL", model_name="GRAE"):
+def classify_and_explain(adata, label, hypopt=1, n_feat=50, path="SEAGALL", model_name="GRAE"):
 
 	'''
 	Function to extract the relevant features
@@ -136,8 +136,6 @@ def classify_and_explain(adata, label, path, hypopt=1, n_feat=50, path="SEAGALL"
 	adata : count matrix of class AnnData
 	
 	label : target label
-
-	path : path where to save the results
 
 	hypopt : fraction of cells to use to run HPO, default 1 (all the cells) 0 for not run it
 
