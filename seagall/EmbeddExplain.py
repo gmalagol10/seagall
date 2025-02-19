@@ -66,10 +66,10 @@ def GeometricalEmbedding(M, y=None, epochs=300, patience=20, train_size=0.85, pa
 	m = GRAE(epochs=epochs, patience=patience, n_components=int(np.around(M.shape[1]**(1/3), decimals=0)))
 	dataset=grae.data.base_dataset.BaseDataset(M, y, "none", train_size, 42, y)
 	m.fit(dataset)
-	m.save(f"{path}/Sgl{model_name}.pth")
+	m.save(f"{path}/SEAGALL_{model_name}.pth")
 	return m.transform(dataset), scipy.sparse.csr_matrix(m.inverse_transform(m.transform(dataset)), dtype="float32")
 
-def embbedding_and_graph(adata, label=None, layer="X", epochs=300, patience=20, train_size=0.85, , path="SEAGALL", model_name="GRAE"):
+def embbedding_and_graph(adata, label=None, layer="X", epochs=300, patience=20, train_size=0.85, path="SEAGALL", model_name="GRAE"):
 
 	'''
 	Function to contruct the k-NN graph of the cell in GRAE's latent space
@@ -125,7 +125,7 @@ def embbedding_and_graph(adata, label=None, layer="X", epochs=300, patience=20, 
 	adata.obsp[f"GRAE_graph"], adata.obsm["GRAE_latent_space"], adata.layers[f"GRAE_decoded_matrix"]  = scipy.sparse.csr_matrix(ad_ret.obsp["connectivities"], dtype="float32"), Z[0], Z[1]
 
 
-def classify_and_explain(adata, label, path, hypopt=1, n_feat=50):
+def classify_and_explain(adata, label, path, hypopt=1, n_feat=50, path="SEAGALL", model_name="GRAE"):
 
 	'''
 	Function to extract the relevant features
@@ -143,6 +143,9 @@ def classify_and_explain(adata, label, path, hypopt=1, n_feat=50):
 
 	n_feat : number of to extract, default = 50. However, in adata.var will be saved the importance of each feature for each ground truth label
 
+	path : folder where to save the model, default =  SEAGALL
+
+	model_name : name of the model, default = GAT
 
 	Output
 	------
@@ -151,8 +154,8 @@ def classify_and_explain(adata, label, path, hypopt=1, n_feat=50):
 
 	'''
 
-	path=f"{path}/Seagal_{label}"
 	Path(path).mkdir(parents=True, exist_ok=True)
+	path=f"{path}/SEAGALL_{model_name}_{label}"
 
 	adata=adata[adata.obs[label].dropna().index]
 	adata.var_names_make_unique()
@@ -164,7 +167,7 @@ def classify_and_explain(adata, label, path, hypopt=1, n_feat=50):
 		
 	if hypopt > 0:
 		print(time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()), "Looking for HPO file", flush=True)
-		xai_path = f"{path}/Seagal_{label}_HPO"
+		xai_path = f"{path}_HPO"
 
 		if os.path.isfile(f"{xai_path}.json") == False:
 			print(time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()), f"No HPO .json found --> Running HPO using {hypopt} of the cells", flush=True)
@@ -189,7 +192,7 @@ def classify_and_explain(adata, label, path, hypopt=1, n_feat=50):
 
 	else:
 		print(time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()), "Creating dataset, no HPO", flush=True)
-		xai_path = f"{path}/Seagal_{label}"
+		xai_path = path
 		mydata = mlu.create_pyg_dataset(adata, label)
 		mydata = torch_geometric.transforms.RandomNodeSplit(num_val=0.15, num_test=0.15)(mydata)
 		model = mlu.GAT(n_feats=mydata.num_features, n_classes=mydata.num_classes).to(device)
@@ -199,9 +202,9 @@ def classify_and_explain(adata, label, path, hypopt=1, n_feat=50):
 	criterion = torch.nn.CrossEntropyLoss(weight=torch.tensor(class_weights, dtype=torch.float), reduction="mean")
 
 	print(time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()), "Training model", flush=True)
-	model, history = mlu.GAT_train_node_classifier(model, mydata, optimizer_model, criterion, f"{xai_path}_Model.pth", epochs=500, patience=50)
+	model, history = mlu.GAT_train_node_classifier(model, mydata, optimizer_model, criterion, f"{xai_path}.pth", epochs=500, patience=50)
 
-	with open(f"{xai_path}_Model_Progress.json", "w") as f:
+	with open(f"{xai_path}_GAT_Progress.json", "w") as f:
 		json.dump(history, f)
 	del history
 
@@ -210,13 +213,11 @@ def classify_and_explain(adata, label, path, hypopt=1, n_feat=50):
 	model.eval()
 	pred = model(mydata.x, mydata.edge_index).argmax(dim=1)
 
-	adata.obs["Seagal_set"] = "--"
-	adata.obs["Seagal_prediction"] = [adata.uns["inv_map"][str(num)] for num in list(pred.cpu().detach().numpy())]
+	adata.obs["SEAGALL_set"] = "--"
+	adata.obs["SEAGALL_prediction"] = [adata.uns["inv_map"][str(num)] for num in list(pred.cpu().detach().numpy())]
 	adata.obs.loc[mydata.train_mask.cpu().detach().numpy(),"SEAGALL_set"] = "Train"
 	adata.obs.loc[mydata.val_mask.cpu().detach().numpy(),"SEAGALL_set"] = "Validation"
 	adata.obs.loc[mydata.test_mask.cpu().detach().numpy(),"SEAGALL_set"] = "Test"
-	adata.obs.to_csv(f"{xai_path}_Predictions.tsv.gz", sep="\t", compression="gzip")
-
 
 	print(time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()), "XAI features extraction", flush=True)
 	explainer = torch_geometric.explain.Explainer(
