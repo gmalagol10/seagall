@@ -202,18 +202,18 @@ def classify_and_explain(adata, label, path, hypopt=1, n_feat=50):
 	model.eval()
 	pred = model(mydata.x, mydata.edge_index).argmax(dim=1)
 
-	adata.obs["Seagal_set"]="--"
-	adata.obs["Seagal_prediction"]=[adata.uns["inv_map"][str(num)] for num in list(pred.cpu().detach().numpy())]
-	adata.obs.loc[mydata.train_mask.cpu().detach().numpy(),"Seagal_set"]="Train"
-	adata.obs.loc[mydata.val_mask.cpu().detach().numpy(),"Seagal_set"]="Validation"
-	adata.obs.loc[mydata.test_mask.cpu().detach().numpy(),"Seagal_set"]="Test"
+	adata.obs["Seagal_set"] = "--"
+	adata.obs["Seagal_prediction"] = [adata.uns["inv_map"][str(num)] for num in list(pred.cpu().detach().numpy())]
+	adata.obs.loc[mydata.train_mask.cpu().detach().numpy(),"Seagal_set"] = "Train"
+	adata.obs.loc[mydata.val_mask.cpu().detach().numpy(),"Seagal_set"] = "Validation"
+	adata.obs.loc[mydata.test_mask.cpu().detach().numpy(),"Seagal_set"] = "Test"
 	adata.obs.to_csv(f"{xai_path}_Predictions.tsv.gz", sep="\t", compression="gzip")
 
 
 	print(time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()), "XAI features extraction", flush=True)
 	explainer = torch_geometric.explain.Explainer(
 				model=model,
-				algorithm=torch_geometric.explain.GNNExplainer(epochs=200),
+				algorithm=torch_geometric.explain.GNNExplainer(epochs=300),
 				explanation_type='model',
 				node_mask_type='attributes',
 				edge_mask_type='object',
@@ -224,29 +224,16 @@ def classify_and_explain(adata, label, path, hypopt=1, n_feat=50):
 				   
 	explanation = explainer(x=mydata.x, edge_index=mydata.edge_index)
 
-	a=pd.DataFrame(explanation.node_mask, index=adata.obs.index, columns=adata.var.index)
-	df_feat=pd.DataFrame()
-	df_imp=pd.DataFrame()
-	for ct in sorted(list(set(adata.obs[label]))):
-		b=pd.DataFrame(a.loc[adata.obs[adata.obs[label]==ct].index])
-		df_imp=pd.concat([df_imp, pd.DataFrame(b.mean().sort_values(ascending=False).to_numpy())[0]], axis=1)
-		df_feat=pd.concat([df_feat, pd.DataFrame(b.mean().sort_values(ascending=False).index)], axis=1)
-	df_feat.columns=sorted(list(set(adata.obs[label])))
-	df_imp.columns=sorted(list(set(adata.obs[label])))
+	feat_imp_matrix = pd.DataFrame(explanation.node_mask, index=adata.obs.index, columns=adata.var.index)
+	for ct in sorted(set(adata.obs[label])):
+		imps = np.array(feat_imp_matrix.loc[adata[adata.obs[label]==ct].obs.index].mean(axis=0))
+		adata.var[f"Imp_for_{ct}"] = imps
 
-	a.to_csv(f"{xai_path}_FeatImpCM.tsv.gz", sep="\t", compression="gzip")
-	df_feat.to_csv(f"{xai_path}_Features.tsv.gz", sep="\t", compression="gzip")
-	df_imp.to_csv(f"{xai_path}_FeaturesImportance.tsv.gz", sep="\t", compression="gzip")
-	del df_imp, a
-
-
-	jc=pd.DataFrame(index=df_feat.columns, columns=df_feat.columns)
-	for column in jc.columns:
-		for col in jc.columns:
-			if len(df_feat[column].dropna())==0 or len(df_feat[col].dropna())==0:
-				print("Problem with either {column} or {col}")
-			else:	
-				fsi=df_feat[column].dropna()[:int(n_feat)]
-				fsj=df_feat[col].dropna()[:int(n_feat)]
-				jc.at[column, col]=len(ut.intersection([fsi, fsj]))/len(ut.flat_list([fsi, fsj]))
+	cts = sorted(set(adata.obs[label]))
+	jc = pd.DataFrame(index=cts, columns=cts)
+	for ct in cts:
+		for clt in cts[cts.index(ct)+1:]:
+			fsi = adata[adata.obs[label]==ct].var[f"Imp_for_{ct}"].sort_values()[::-1][:int(n_feat)].index
+			fsj = adata[adata.obs[label]==ct].var[f"Imp_for_{clt}"].sort_values()[::-1][:int(n_feat)].index
+			jc.at[ct, clt] = len(ut.intersection([fsi, fsj]))/len(sgl.ut.flat_list([fsi, fsj]))
 	jc.to_csv(f"{xai_path}_Top{str(n_feat)}Features_Jaccard.tsv.gz", sep="\t", compression="gzip")
