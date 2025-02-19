@@ -219,7 +219,7 @@ def classify_and_explain(adata, label, hypopt=1, n_feat=50, path="SEAGALL", mode
 	print(time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()), "XAI features extraction", flush=True)
 	explainer = torch_geometric.explain.Explainer(
 				model=model,
-				algorithm=torch_geometric.explain.GNNExplainer(epochs=50),
+				algorithm=torch_geometric.explain.GNNExplainer(epochs=200),
 				explanation_type='model',
 				node_mask_type='attributes',
 				edge_mask_type='object',
