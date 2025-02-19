@@ -102,7 +102,7 @@ def embbedding_and_graph(adata, label=None, layer="X", epochs=300, patience=20, 
 	adata.var_names_make_unique()
 
 	if label is not None:
-		adata=adata[adata.obs[label].dropna().index]
+		adata.obs[label].astype(str).replace("nan","unknown")
 		mymap = dict([(y,str(x)) for x,y in enumerate(sorted(set(adata.obs[label])))])
 		inv_map = {v: k for k, v in mymap.items()}
 		adata.uns["map"]=mymap
@@ -155,7 +155,7 @@ def classify_and_explain(adata, label, hypopt=1, n_feat=50, path="SEAGALL", mode
 	Path(path).mkdir(parents=True, exist_ok=True)
 	path=f"{path}/SEAGALL_{model_name}_{label}"
 
-	adata=adata[adata.obs[label].dropna().index]
+	adata.obs[label].astype(str).replace("nan","unknown")
 	adata.var_names_make_unique()
 	mymap = dict([(y,str(x)) for x,y in enumerate(sorted(set(adata.obs[label])))])
 	inv_map = {v: k for k, v in mymap.items()}
