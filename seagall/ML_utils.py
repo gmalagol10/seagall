@@ -189,7 +189,7 @@ def create_pyg_dataset(adata, label, size=1):
 			sc.pp.subsample(sub_ad, fraction=size)
 			cells.append(sub_ad.obs.index)
 			del sub_ad
-		cells=sgl.ut.flat_list(cells)
+		cells=ut.flat_list(cells)
 		ad=adata[cells]
 	elif size == 0:
 		raise ValueError(f"Size can't be {size}")
