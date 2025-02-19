@@ -67,7 +67,7 @@ def GeometricalEmbedding(M, y=None, epochs=300, patience=20, train_size=0.85, mo
 	m.save(f"{model_name}.pth")
 	return m.transform(temp), scipy.sparse.csr_matrix(m.inverse_transform(m.transform(temp)), dtype="float32")
 
-def embbedding_and_graph(adata, y=None, layer="X", epochs=300, patience=20, train_size=0.85, model_name="SeagallGRAE"):
+def embbedding_and_graph(adata, label=None, layer="X", epochs=300, patience=20, train_size=0.85, model_name="SeagallGRAE"):
 
 	'''
 	Function to contruct the k-NN graph of the cell in GRAE's latent space
@@ -77,7 +77,7 @@ def embbedding_and_graph(adata, y=None, layer="X", epochs=300, patience=20, trai
 
 	adata : count matrix of class AnnData
 	
-	y : target label, important for the train-val-split of cells accounting for label unbalance, default = None
+	label : target label, important for the train-val-split of cells accounting for label unbalance, default = None
 
 	layer : layer to embed, default = "X"
 
@@ -96,17 +96,27 @@ def embbedding_and_graph(adata, y=None, layer="X", epochs=300, patience=20, trai
 	AnnData object with the graph in .obsp and the representation in .obsm, decoded matrix in .layer
 
 	'''
-	
+	adata.var_names_make_unique()
+
+	is label in not None:
+		adata=adata[adata.obs[label].dropna().index]
+		mymap = dict([(y,str(x)) for x,y in enumerate(sorted(set(adata.obs[label])))])
+		inv_map = {v: k for k, v in mymap.items()}
+		adata.uns["map"]=mymap
+		adata.uns["inv_map"]=inv_map
+		adata.obs["target"]=[mymap[x] for x in adata.obs[label]]
+		adata.obs["target"]=adata.obs["target"].astype(int)
+
 	if layer == "X":
 		M=adata.X.copy()
 	else:
 		M=adata.layers[layer].copy()
-	
-	Z = GeometricalEmbedding(M, y=y, epochs=epochs, patience=patience, train_size=train_size, model_name=model_name)
+
+	Z = GeometricalEmbedding(M, y=adata.obs.target, epochs=epochs, patience=patience, train_size=train_size, model_name=model_name)
 	ad_ret=sc.AnnData(Z[0])
 	sc.pp.neighbors(ad_ret, use_rep="X", method="umap")
 
-	adata.obsp[f"GRAE_graph"], adata.obsm["GRAE_latent_space"], adata.layers[f"GRAE_decoded_matrix"],  = scipy.sparse.csr_matrix(ad_ret.obsp["connectivities"], dtype="float32"), Z[0], Z[1]
+	adata.obsp[f"GRAE_graph"], adata.obsm["GRAE_latent_space"], adata.layers[f"GRAE_decoded_matrix"]  = scipy.sparse.csr_matrix(ad_ret.obsp["connectivities"], dtype="float32"), Z[0], Z[1]
 
 
 def classify_and_explain(adata, label, path, hypopt=1, n_feat=50):
@@ -138,6 +148,7 @@ def classify_and_explain(adata, label, path, hypopt=1, n_feat=50):
 	path=f"{path}/Seagal_{label}"
 	Path(path).mkdir(parents=True, exist_ok=True)
 
+	adata=adata[adata.obs[label].dropna().index]
 	adata.var_names_make_unique()
 	mymap = dict([(y,str(x)) for x,y in enumerate(sorted(set(adata.obs[label])))])
 	inv_map = {v: k for k, v in mymap.items()}
