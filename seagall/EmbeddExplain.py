@@ -28,7 +28,7 @@ from pathlib import Path
 torch.manual_seed(np.random.randint(0,10000))
 device = 'cpu'
 
-def GeometricalEmbedding(M, y=None, epochs=300, patience=20, train_size=0.85, model_name="SeagallGRAE"):
+def GeometricalEmbedding(M, y, epochs=300, patience=20, train_size=0.85, model_name="SeagallGRAE"):
 	'''
 	Embedding of a feature matrix preserving geometry. See https://github.com/KevinMoonLab/GRAE for more infos 
 
@@ -37,7 +37,7 @@ def GeometricalEmbedding(M, y=None, epochs=300, patience=20, train_size=0.85, mo
 
 	M : N * F matrix with N cells and F features
 	
-	y : target label, important for the train-val-split of cells accounting for label unbalance, default = None
+	y : array containing the class of each cell
 
 	epochs : number of epoch to train the GRAE for, default = 300
 
@@ -54,11 +54,6 @@ def GeometricalEmbedding(M, y=None, epochs=300, patience=20, train_size=0.85, mo
 	Embedded matrix (N x latent space's dimension) and decoded matrix (N x F)
 
 	'''
-
-	if y is not None:
-		y=np.array(y).astype(int)
-	else:
-		y=np.ones(shape=(M.shape[0],))		
 	
 	M = scipy.sparse.csr_matrix(M, dtype="float32").toarray()
 	m = GRAE(epochs=epochs, patience=patience, n_components=int(np.around(M.shape[1]**(1/3), decimals=0)))
@@ -106,13 +101,16 @@ def embbedding_and_graph(adata, label=None, layer="X", epochs=300, patience=20, 
 		adata.uns["inv_map"]=inv_map
 		adata.obs["target"]=[mymap[x] for x in adata.obs[label]]
 		adata.obs["target"]=adata.obs["target"].astype(int)
+		y=np.array(adata.obs["target"]).astype(int)
+	else:
+		y=np.ones(shape=(adata.shape[0],))	
 
 	if layer == "X":
 		M=adata.X.copy()
 	else:
 		M=adata.layers[layer].copy()
 
-	Z = GeometricalEmbedding(M, y=adata.obs.target, epochs=epochs, patience=patience, train_size=train_size, model_name=model_name)
+	Z = GeometricalEmbedding(M, y=y, epochs=epochs, patience=patience, train_size=train_size, model_name=model_name)
 	ad_ret=sc.AnnData(Z[0])
 	sc.pp.neighbors(ad_ret, use_rep="X", method="umap")
 
