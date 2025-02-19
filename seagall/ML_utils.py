@@ -13,6 +13,8 @@ import torch
 import torch_geometric
 device = 'cpu'
 
+from . import Utils as ut
+
 class GAT(torch.nn.Module):
 
 	'''
