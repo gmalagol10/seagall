@@ -219,7 +219,7 @@ def classify_and_explain(adata, label, hypopt=1, n_feat=50, path="SEAGALL", mode
 	print(time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()), "XAI features extraction", flush=True)
 	explainer = torch_geometric.explain.Explainer(
 				model=model,
-				algorithm=torch_geometric.explain.GNNExplainer(epochs=300),
+				algorithm=torch_geometric.explain.GNNExplainer(epochs=50),
 				explanation_type='model',
 				node_mask_type='attributes',
 				edge_mask_type='object',
@@ -243,3 +243,5 @@ def classify_and_explain(adata, label, hypopt=1, n_feat=50, path="SEAGALL", mode
 			fsj = adata[adata.obs[label]==gtj].var[f"Importance_for_{gtj}"].sort_values()[::-1][:int(n_feat)].index
 			jc.at[gti, gtj] = len(ut.intersection([fsi, fsj]))/len(ut.flat_list([fsi, fsj]))
 	jc.to_csv(f"{xai_path}_Top{str(n_feat)}Features_Jaccard.tsv.gz", sep="\t", compression="gzip")
+
+	return adata

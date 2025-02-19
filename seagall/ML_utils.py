@@ -183,7 +183,7 @@ def split_train_val_test(X, y, train_size=0.7, val_size=0.1, test_size=0.2, trai
 	return train_dataloader, val_dataloader, test_dataloader
 
 def create_pyg_dataset(adata, label, size=1):
-	print(f"Creating pyg dataset based on AnnData object with target label {label} and GRAE's graph. Subsamplig a fraction of {size} of the cells", flush=True)
+	print(f"Creating pyg dataset based on AnnData object with target label {label} and GRAE's graph. Using {int(size**100)} % of the cells", flush=True)
 	if size < 1 and size > 0:
 		cells=[]
 		for l in set(adata.obs[label].dropna()):
