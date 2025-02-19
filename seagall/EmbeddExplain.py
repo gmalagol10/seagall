@@ -206,7 +206,6 @@ def classify_and_explain(adata, label, hypopt=1, n_feat=50, path="SEAGALL", mode
 		json.dump(history, f)
 	del history
 
-
 	print(time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()), "Metrics for model's performances", flush=True)
 	model.eval()
 	pred = model(mydata.x, mydata.edge_index).argmax(dim=1)
