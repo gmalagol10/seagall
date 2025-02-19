@@ -28,7 +28,7 @@ from pathlib import Path
 torch.manual_seed(np.random.randint(0,10000))
 device = 'cpu'
 
-def GeometricalEmbedding(M, y, epochs=300, patience=20, train_size=0.85, model_name="SeagallGRAE"):
+def GeometricalEmbedding(M, y=None, epochs=300, patience=20, train_size=0.85, path="SEAGALL", model_name="GRAE"):
 	'''
 	Embedding of a feature matrix preserving geometry. See https://github.com/KevinMoonLab/GRAE for more infos 
 
@@ -37,7 +37,7 @@ def GeometricalEmbedding(M, y, epochs=300, patience=20, train_size=0.85, model_n
 
 	M : N * F matrix with N cells and F features
 	
-	y : array containing the class of each cell
+	y : array containing the class of each cell, default = None
 
 	epochs : number of epoch to train the GRAE for, default = 300
 
@@ -45,7 +45,9 @@ def GeometricalEmbedding(M, y, epochs=300, patience=20, train_size=0.85, model_n
 
 	train_size : fraction of dataset to use for training the GRAE, default = 0.85
 
-	model_name : name to use to save the model, default =  SeagallGRAE
+	path : folder where to save the model, default =  SEAGALL
+
+	model_name : name of the model, default = GRAE
 
 
 	Output
@@ -54,15 +56,20 @@ def GeometricalEmbedding(M, y, epochs=300, patience=20, train_size=0.85, model_n
 	Embedded matrix (N x latent space's dimension) and decoded matrix (N x F)
 
 	'''
-	
+
+	Path(path).mkdir(parents=True, exist_ok=True)
+
+	if y is None:
+		y=np.ones(shape=(M.shape[0],))	
+
 	M = scipy.sparse.csr_matrix(M, dtype="float32").toarray()
 	m = GRAE(epochs=epochs, patience=patience, n_components=int(np.around(M.shape[1]**(1/3), decimals=0)))
-	temp=grae.data.base_dataset.BaseDataset(M, y, "none", train_size, 42, y)
-	m.fit(temp)
-	m.save(f"{model_name}.pth")
-	return m.transform(temp), scipy.sparse.csr_matrix(m.inverse_transform(m.transform(temp)), dtype="float32")
+	dataset=grae.data.base_dataset.BaseDataset(M, y, "none", train_size, 42, y)
+	m.fit(dataset)
+	m.save(f"{path}/Sgl{model_name}.pth")
+	return m.transform(dataset), scipy.sparse.csr_matrix(m.inverse_transform(m.transform(dataset)), dtype="float32")
 
-def embbedding_and_graph(adata, label=None, layer="X", epochs=300, patience=20, train_size=0.85, model_name="SeagallGRAE"):
+def embbedding_and_graph(adata, label=None, layer="X", epochs=300, patience=20, train_size=0.85, , path="SEAGALL", model_name="GRAE"):
 
 	'''
 	Function to contruct the k-NN graph of the cell in GRAE's latent space
@@ -82,13 +89,14 @@ def embbedding_and_graph(adata, label=None, layer="X", epochs=300, patience=20, 
 
 	train_size : fraction of dataset to use for training the GRAE, default = 0.85
 
-	model_name : name to use to save the model, default =  SeagallGRAE
+	path : folder where to save the model, default =  SEAGALL
 
+	model_name : name of the model, default = GRAE
 
 	Output
 	------
 	
-	AnnData object with the graph in .obsp and the representation in .obsm, decoded matrix in .layer
+	AnnData object with the graph in .obsp, the latent space in .obsm, decoded matrix in .layer
 
 	'''
 	adata.var_names_make_unique()
@@ -110,7 +118,7 @@ def embbedding_and_graph(adata, label=None, layer="X", epochs=300, patience=20, 
 	else:
 		M=adata.layers[layer].copy()
 
-	Z = GeometricalEmbedding(M, y=y, epochs=epochs, patience=patience, train_size=train_size, model_name=model_name)
+	Z = GeometricalEmbedding(M=M, y=y, epochs=epochs, patience=patience, train_size=train_size, path=path, model_name=model_name)
 	ad_ret=sc.AnnData(Z[0])
 	sc.pp.neighbors(ad_ret, use_rep="X", method="umap")
 
@@ -133,7 +141,7 @@ def classify_and_explain(adata, label, path, hypopt=1, n_feat=50):
 
 	hypopt : fraction of cells to use to run HPO, default 1 (all the cells) 0 for not run it
 
-	n_feat : number of to extract, default = 50. Anyway it will be saved a file with the importance of each feature for each cell
+	n_feat : number of to extract, default = 50. However, in adata.var will be saved the importance of each feature for each ground truth label
 
 
 	Output
@@ -204,9 +212,9 @@ def classify_and_explain(adata, label, path, hypopt=1, n_feat=50):
 
 	adata.obs["Seagal_set"] = "--"
 	adata.obs["Seagal_prediction"] = [adata.uns["inv_map"][str(num)] for num in list(pred.cpu().detach().numpy())]
-	adata.obs.loc[mydata.train_mask.cpu().detach().numpy(),"Seagal_set"] = "Train"
-	adata.obs.loc[mydata.val_mask.cpu().detach().numpy(),"Seagal_set"] = "Validation"
-	adata.obs.loc[mydata.test_mask.cpu().detach().numpy(),"Seagal_set"] = "Test"
+	adata.obs.loc[mydata.train_mask.cpu().detach().numpy(),"SEAGALL_set"] = "Train"
+	adata.obs.loc[mydata.val_mask.cpu().detach().numpy(),"SEAGALL_set"] = "Validation"
+	adata.obs.loc[mydata.test_mask.cpu().detach().numpy(),"SEAGALL_set"] = "Test"
 	adata.obs.to_csv(f"{xai_path}_Predictions.tsv.gz", sep="\t", compression="gzip")
 
 
@@ -225,15 +233,15 @@ def classify_and_explain(adata, label, path, hypopt=1, n_feat=50):
 	explanation = explainer(x=mydata.x, edge_index=mydata.edge_index)
 
 	feat_imp_matrix = pd.DataFrame(explanation.node_mask, index=adata.obs.index, columns=adata.var.index)
-	for ct in sorted(set(adata.obs[label])):
-		imps = np.array(feat_imp_matrix.loc[adata[adata.obs[label]==ct].obs.index].mean(axis=0))
-		adata.var[f"Imp_for_{ct}"] = imps
+	for gt in sorted(set(adata.obs[label])):
+		imps = np.array(feat_imp_matrix.loc[adata[adata.obs[label]==gt].obs.index].mean(axis=0))
+		adata.var[f"Importance_for_{gt}"] = imps
 
-	cts = sorted(set(adata.obs[label]))
-	jc = pd.DataFrame(index=cts, columns=cts)
-	for ct in cts:
-		for clt in cts[cts.index(ct)+1:]:
-			fsi = adata[adata.obs[label]==ct].var[f"Imp_for_{ct}"].sort_values()[::-1][:int(n_feat)].index
-			fsj = adata[adata.obs[label]==ct].var[f"Imp_for_{clt}"].sort_values()[::-1][:int(n_feat)].index
-			jc.at[ct, clt] = len(ut.intersection([fsi, fsj]))/len(ut.flat_list([fsi, fsj]))
+	gts = sorted(set(adata.obs[label]))
+	jc = pd.DataFrame(index=gts, columns=gts)
+	for gti in gts:
+		for gtj in gts[gts.index(gt)+1:]:
+			fsi = adata[adata.obs[label]==gti].var[f"Importance_for_{gti}"].sort_values()[::-1][:int(n_feat)].index
+			fsj = adata[adata.obs[label]==gtj].var[f"Importance_for_{gtj}"].sort_values()[::-1][:int(n_feat)].index
+			jc.at[gti, gtj] = len(ut.intersection([fsi, fsj]))/len(ut.flat_list([fsi, fsj]))
 	jc.to_csv(f"{xai_path}_Top{str(n_feat)}Features_Jaccard.tsv.gz", sep="\t", compression="gzip")
