@@ -235,5 +235,5 @@ def classify_and_explain(adata, label, path, hypopt=1, n_feat=50):
 		for clt in cts[cts.index(ct)+1:]:
 			fsi = adata[adata.obs[label]==ct].var[f"Imp_for_{ct}"].sort_values()[::-1][:int(n_feat)].index
 			fsj = adata[adata.obs[label]==ct].var[f"Imp_for_{clt}"].sort_values()[::-1][:int(n_feat)].index
-			jc.at[ct, clt] = len(ut.intersection([fsi, fsj]))/len(sgl.ut.flat_list([fsi, fsj]))
+			jc.at[ct, clt] = len(ut.intersection([fsi, fsj]))/len(ut.flat_list([fsi, fsj]))
 	jc.to_csv(f"{xai_path}_Top{str(n_feat)}Features_Jaccard.tsv.gz", sep="\t", compression="gzip")
