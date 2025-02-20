@@ -166,20 +166,20 @@ def classify_and_explain(adata, label, hypopt=1, n_feat=50, path="SEAGALL", mode
 		
 	if hypopt > 0:
 		print(time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()), "Looking for HPO file", flush=True)
-		xai_path = f"{path}_HPO"
+		hpo_path = f"{path}_HPO"
 
-		if os.path.isfile(f"{xai_path}.json") == False:
+		if os.path.isfile(f"{hpo_path}.json") == False:
 			print(time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()), f"No HPO .json found --> Running HPO using {int(100*hypopt)}% of the cells", flush=True)
 			mydata = mlu.create_pyg_dataset(adata, label, hypopt)
 			mydata = torch_geometric.transforms.RandomNodeSplit(num_val=0.2, num_test=0)(mydata)
-			study = hpo.run_HPO_GAT(mydata, xai_path)
+			study = hpo.run_HPO_GAT(mydata, hpo_path)
 			
-			with open(f"{xai_path}.json", "w") as f:
+			with open(f"{hpo_path}.json", "w") as f:
 				json.dump(study.best_params, f)
 			best_params = study.best_params
 		else:
 			print(time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()), "HPO .json found", flush=True)
-			best_params = json.load(open(f"{xai_path}.json", "r"))
+			best_params = json.load(open(f"{hpo_path}.json", "r"))
 			for key, value in best_params.items():
 				print(f"Best value for {key} is {value}", flush=True)	
 		
@@ -191,7 +191,6 @@ def classify_and_explain(adata, label, hypopt=1, n_feat=50, path="SEAGALL", mode
 
 	else:
 		print(time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()), "Creating dataset, no HPO", flush=True)
-		xai_path = path
 		mydata = mlu.create_pyg_dataset(adata, label)
 		mydata = torch_geometric.transforms.RandomNodeSplit(num_val=0.15, num_test=0.15)(mydata)
 		model = mlu.GAT(n_feats=mydata.num_features, n_classes=mydata.num_classes).to(device)
@@ -201,9 +200,9 @@ def classify_and_explain(adata, label, hypopt=1, n_feat=50, path="SEAGALL", mode
 	criterion = torch.nn.CrossEntropyLoss(weight=torch.tensor(class_weights, dtype=torch.float), reduction="mean")
 
 	print(time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()), "Training model", flush=True)
-	model, history = mlu.GAT_train_node_classifier(model, mydata, optimizer_model, criterion, f"{xai_path}.pth", epochs=300, patience=20)
+	model, history = mlu.GAT_train_node_classifier(model, mydata, optimizer_model, criterion, f"{path}.pth", epochs=300, patience=20)
 
-	with open(f"{xai_path}_GAT_Progress.json", "w") as f:
+	with open(f"{path}_GAT_Progress.json", "w") as f:
 		json.dump(history, f)
 	del history
 
@@ -243,4 +242,4 @@ def classify_and_explain(adata, label, hypopt=1, n_feat=50, path="SEAGALL", mode
 			fsi = adata[adata.obs[label]==gti].var[f"Importance_for_{gti}"].sort_values()[::-1][:int(n_feat)].index
 			fsj = adata[adata.obs[label]==gtj].var[f"Importance_for_{gtj}"].sort_values()[::-1][:int(n_feat)].index
 			jc.at[gti, gtj] = len(ut.intersection([fsi, fsj]))/len(ut.flat_list([fsi, fsj]))
-	jc.to_csv(f"{xai_path}_Top{str(n_feat)}Features_Jaccard.tsv.gz", sep="\t", compression="gzip")
+	jc.to_csv(f"{path}_Top{str(n_feat)}Features_Jaccard.tsv.gz", sep="\t", compression="gzip")
