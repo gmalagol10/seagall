@@ -28,7 +28,7 @@ from pathlib import Path
 torch.manual_seed(np.random.randint(0,10000))
 device = 'cpu'
 
-def GeometricalEmbedding(M, y=None, epochs=300, patience=20, train_size=0.85, path="SEAGALL", model_name="GRAE"):
+def geometrical_embedding(M, y=None, epochs=300, patience=20, train_size=0.85, path="SEAGALL", model_name="GRAE"):
 	'''
 	Embedding of a feature matrix preserving geometry. See https://github.com/KevinMoonLab/GRAE for more infos 
 
@@ -69,7 +69,7 @@ def GeometricalEmbedding(M, y=None, epochs=300, patience=20, train_size=0.85, pa
 	m.save(f"{path}/SEAGALL_{model_name}.pth")
 	return m.transform(dataset), scipy.sparse.csr_matrix(m.inverse_transform(m.transform(dataset)), dtype="float32")
 
-def embbedding_and_graph(adata, label=None, layer="X", epochs=300, patience=20, train_size=0.85, path="SEAGALL", model_name="GRAE"):
+def geometrical_graph(adata, label=None, layer="X", epochs=300, patience=20, train_size=0.85, path="SEAGALL", model_name="GRAE"):
 
 	'''
 	Function to contruct the k-NN graph of the cell in GRAE's latent space
@@ -96,7 +96,7 @@ def embbedding_and_graph(adata, label=None, layer="X", epochs=300, patience=20, 
 	Output
 	------
 	
-	AnnData object with the graph in .obsp, the latent space in .obsm, decoded matrix in .layer
+	AnnData object with the graph in .obsp, the latent space in .obsm, decoded matrix in .layers
 
 	'''
 	adata.var_names_make_unique()
@@ -148,7 +148,8 @@ def classify_and_explain(adata, label, hypopt=1, n_feat=50, path="SEAGALL", mode
 	Output
 	------
 	
-	AnnData object with updates infos about the classification
+	AnnData object with importance of each feature for each class in .var and predictions infos in .obs
+	The classifier is saved in {path}/SEAGALL_{model_name}_{label}
 
 	'''
 
