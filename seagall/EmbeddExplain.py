@@ -28,7 +28,7 @@ from pathlib import Path
 torch.manual_seed(np.random.randint(0,10000))
 device = 'cpu'
 
-def geometrical_embedding(M, y=None, epochs=300, patience=20, train_size=0.85, path="SEAGALL", model_name="GRAE"):
+def geometrical_embedding(M, y=None, epochs=300, patience=20, train_size=0.85, path="SEAGALL", model_name="mymodel"):
 	'''
 	Embedding of a feature matrix preserving geometry. See https://github.com/KevinMoonLab/GRAE for more infos 
 
@@ -47,7 +47,7 @@ def geometrical_embedding(M, y=None, epochs=300, patience=20, train_size=0.85, p
 
 	path : folder where to save the model, default =  SEAGALL
 
-	model_name : name of the model, default = GRAE
+	model_name : name of the model, default = mymodel
 
 
 	Output
@@ -66,10 +66,10 @@ def geometrical_embedding(M, y=None, epochs=300, patience=20, train_size=0.85, p
 	m = GRAE(epochs=epochs, patience=patience, n_components=int(np.around(M.shape[1]**(1/3), decimals=0)))
 	dataset=grae.data.base_dataset.BaseDataset(M, y, "none", train_size, 42, y)
 	m.fit(dataset)
-	m.save(f"{path}/SEAGALL_{model_name}.pth")
+	m.save(f"{path}/SEAGALL_GRAE_{model_name}.pth")
 	return m.transform(dataset), scipy.sparse.csr_matrix(m.inverse_transform(m.transform(dataset)), dtype="float32")
 
-def geometrical_graph(adata, label=None, layer="X", epochs=300, patience=20, train_size=0.85, path="SEAGALL", model_name="GRAE"):
+def geometrical_graph(adata, label=None, layer="X", epochs=300, patience=20, train_size=0.85, path="SEAGALL", model_name="mymodel"):
 
 	'''
 	Function to contruct the k-NN graph of the cell in GRAE's latent space
@@ -91,7 +91,7 @@ def geometrical_graph(adata, label=None, layer="X", epochs=300, patience=20, tra
 
 	path : folder where to save the model, default =  SEAGALL
 
-	model_name : name of the model, default = GRAE
+	model_name : name of the model, default = mymodel
 
 	Output
 	------
@@ -118,14 +118,14 @@ def geometrical_graph(adata, label=None, layer="X", epochs=300, patience=20, tra
 	else:
 		M=adata.layers[layer].copy()
 
-	Z = GeometricalEmbedding(M=M, y=y, epochs=epochs, patience=patience, train_size=train_size, path=path, model_name=model_name)
+	Z = geometrical_embedding(M=M, y=y, epochs=epochs, patience=patience, train_size=train_size, path=path, model_name=model_name)
 	ad_ret=sc.AnnData(Z[0])
 	sc.pp.neighbors(ad_ret, use_rep="X", method="umap")
 
 	adata.obsp[f"GRAE_graph"], adata.obsm["GRAE_latent_space"], adata.layers[f"GRAE_decoded_matrix"]  = scipy.sparse.csr_matrix(ad_ret.obsp["connectivities"], dtype="float32"), Z[0], Z[1]
 
 
-def classify_and_explain(adata, label, hypopt=1, n_feat=50, path="SEAGALL", model_name="GRAE"):
+def classify_and_explain(adata, label, hypopt=1, n_feat=50, path="SEAGALL", model_name="mymodel"):
 
 	'''
 	Function to extract the relevant features
@@ -143,7 +143,7 @@ def classify_and_explain(adata, label, hypopt=1, n_feat=50, path="SEAGALL", mode
 
 	path : folder where to save the model, default =  SEAGALL
 
-	model_name : name of the model, default = GAT
+	model_name : name of the model, default = mymodel
 
 	Output
 	------
