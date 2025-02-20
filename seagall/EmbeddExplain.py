@@ -66,7 +66,7 @@ def geometrical_embedding(M, y=None, epochs=300, patience=20, train_size=0.85, p
 	m = GRAE(epochs=epochs, patience=patience, n_components=int(np.around(M.shape[1]**(1/3), decimals=0)))
 	dataset=grae.data.base_dataset.BaseDataset(M, y, "none", train_size, 42, y)
 	m.fit(dataset)
-	m.save(f"{path}/SEAGALL_GRAE_{model_name}.pth")
+	m.save(f"{path}/SEAGALL_{model_name}_GRAE.pth")
 	return m.transform(dataset), scipy.sparse.csr_matrix(m.inverse_transform(m.transform(dataset)), dtype="float32")
 
 def geometrical_graph(adata, label=None, layer="X", epochs=300, patience=20, train_size=0.85, path="SEAGALL", model_name="mymodel"):
