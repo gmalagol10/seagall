@@ -28,7 +28,7 @@ from pathlib import Path
 torch.manual_seed(np.random.randint(0,10000))
 device = 'cpu'
 
-def geometrical_embedding(M, y=None, epochs=300, patience=20, train_size=0.85, path="SEAGALL", model_name="mymodel"):
+def geometrical_embedding(M, y=None, epochs=300, patience=20, path="SEAGALL", model_name="mymodel"):
 	'''
 	Embedding of a feature matrix preserving geometry. See https://github.com/KevinMoonLab/GRAE for more infos 
 
@@ -42,8 +42,6 @@ def geometrical_embedding(M, y=None, epochs=300, patience=20, train_size=0.85, p
 	epochs : number of epoch to train the GRAE for, default = 300
 
 	patience : early stopping threshold, default = 20
-
-	train_size : fraction of dataset to use for training the GRAE, default = 0.85
 
 	path : folder where to save the model, default =  SEAGALL
 
@@ -64,8 +62,12 @@ def geometrical_embedding(M, y=None, epochs=300, patience=20, train_size=0.85, p
 
 	M = scipy.sparse.csr_matrix(M, dtype="float32").toarray()
 	m = GRAE(epochs=epochs, patience=patience, n_components=int(np.around(M.shape[1]**(1/3), decimals=0)))
-	dataset=grae.data.base_dataset.BaseDataset(M, y, "none", train_size, 42, y)
-	m.fit(dataset)
+
+	dataset=base_dataset.BaseDataset(M, y=y, split='none', split_ratio=1, random_state=42, labels=y)
+	train_dataset, val_dataset = dataset.validation_split(ratio=0.15)
+	del dataset
+	
+	m.fit(train_dataset)
 	m.save(f"{path}/SEAGALL_{model_name}_GRAE.pth")
 	return m.transform(dataset), scipy.sparse.csr_matrix(m.inverse_transform(m.transform(dataset)), dtype="float32")
 
