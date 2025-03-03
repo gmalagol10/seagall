@@ -71,7 +71,7 @@ def geometrical_embedding(M, y=None, epochs=300, patience=20, path="SEAGALL", mo
 	m.save(f"{path}/SEAGALL_{model_name}_GRAE.pth")
 	return m.transform(dataset), scipy.sparse.csr_matrix(m.inverse_transform(m.transform(dataset)), dtype="float32")
 
-def geometrical_graph(adata, label=None, layer="X", epochs=300, patience=20, train_size=0.85, path="SEAGALL", model_name="mymodel"):
+def geometrical_graph(adata, label=None, layer="X", epochs=300, patience=20, path="SEAGALL", model_name="mymodel"):
 
 	'''
 	Function to contruct the k-NN graph of the cell in GRAE's latent space
@@ -81,7 +81,7 @@ def geometrical_graph(adata, label=None, layer="X", epochs=300, patience=20, tra
 
 	adata : count matrix of class AnnData
 	
-	label : target label, important for the train-val-split of cells accounting for label unbalance, default = None
+	label : target label, important for the train-val split of cells accounting for label unbalance, default = None
 
 	layer : layer to embed, default = "X"
 
@@ -89,7 +89,6 @@ def geometrical_graph(adata, label=None, layer="X", epochs=300, patience=20, tra
 
 	patience : early stopping threshold, default = 20
 
-	train_size : fraction of dataset to use for training the GRAE, default = 0.85
 
 	path : folder where to save the model, default =  SEAGALL
 
@@ -120,7 +119,7 @@ def geometrical_graph(adata, label=None, layer="X", epochs=300, patience=20, tra
 	else:
 		M=adata.layers[layer].copy()
 
-	Z = geometrical_embedding(M=M, y=y, epochs=epochs, patience=patience, train_size=train_size, path=path, model_name=model_name)
+	Z = geometrical_embedding(M=M, y=y, epochs=epochs, patience=patience, path=path, model_name=model_name)
 	ad_ret=sc.AnnData(Z[0])
 	sc.pp.neighbors(ad_ret, use_rep="X", method="umap")
 
