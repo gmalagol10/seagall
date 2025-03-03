@@ -35,11 +35,11 @@ def HPO_TrainModel_GAT(model, data, model_name, trial, param):
 	Output
 	------
 	
-	Retruns F1W score
+	Retruns F1 score
 
 	'''	
 		
-	class_weights=sklearn.utils.class_weight.compute_class_weight(class_weight='balanced',classes=np.unique(data.y), y=data.y.numpy())
+	class_weights=sklearn.utils.class_weight.compute_class_weight(class_weight='balanced', classes=np.unique(data.y), y=data.y.numpy())
 	criterion = torch.nn.CrossEntropyLoss(weight=torch.tensor(class_weights, dtype=torch.float), reduction="mean")
 	optimizer = torch.optim.Adam(model.parameters(), lr=param['lr'], weight_decay=param['weight_decay'])
 	
@@ -50,19 +50,19 @@ def HPO_TrainModel_GAT(model, data, model_name, trial, param):
 	
 	for epoch in range(1, epochs + 1):
 		### Training
-		train_loss, train_f1w = mlu.GAT_1_step_training(model, train_loader, optimizer, criterion)
+		train_loss, train_f1 = mlu.GAT_1_step_training(model, train_loader, optimizer, criterion)
 
 		### Validation
-		val_loss, val_f1w = mlu.GAT_validation(model, val_loader, optimizer, criterion)
+		val_loss, val_f1 = mlu.GAT_validation(model, val_loader, optimizer, criterion)
 		
 		if epoch % 10 == 0:
-			print(f"Epoch {epoch} | Validation loss {val_loss:.3f} | Validation F1 {val_f1w:.3f}", flush=True)
+			print(f"Epoch {epoch} | Validation loss {val_loss:.3f} | Validation F1 {val_f1:.3f}", flush=True)
 
-		trial.report(val_f1w, epoch)
+		trial.report(val_f1, epoch)
 		if trial.should_prune():
 			raise optuna.exceptions.TrialPruned()
 	
-	return val_f1w
+	return val_f1
 
 def build_GAT(trial, data):
 
@@ -84,9 +84,10 @@ def build_GAT(trial, data):
 
 	'''	
 
-	dim_h = trial.suggest_int('dim_h', low=32, high=128, step=32)
-	heads = trial.suggest_int('heads', low=4, high=20, step=2)
-	model = mlu.GAT(n_feats=data.num_features, n_classes=data.num_classes, dim_h=dim_h, heads=heads).to(device)
+	dim_h = trial.suggest_int('dim_h', low=32, high=512, step=32)
+	heads = trial.suggest_int('heads', low=1, high=20, step=2)
+	dropout = trial.suggest_float('dropout', low=0.1, high=0.6, step=0.1)
+	model = mlu.GAT(n_feats=data.num_features, n_classes=data.num_classes, dim_h=dim_h, heads=heads, dropout=dropout).to(device)
 	
 	return model
 
@@ -109,15 +110,15 @@ def objective_GAT(trial, data, model, model_name):
 	Output
 	------
 	
-	Retruns F1W score
+	Retruns F1 score
 
 	'''	
 
 	params = {'lr': trial.suggest_float('lr', 1e-4, 1e-1, log=True), 'weight_decay': trial.suggest_float('weight_decay', 1e-4, 1e-1, log=True)}
 	model = build_GAT(trial, data)
-	f1w = HPO_TrainModel_GAT(model=model, data=data, model_name=model_name, trial=trial, param=params)
+	f1 = HPO_TrainModel_GAT(model=model, data=data, model_name=model_name, trial=trial, param=params)
 	
-	return f1w
+	return f1
 
 def run_HPO_GAT(data, model_name):
 

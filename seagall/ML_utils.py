@@ -38,16 +38,14 @@ class GAT(torch.nn.Module):
 
 	'''
 
-	def __init__(self, n_feats, n_classes, dim_h=64, heads=8):
+	def __init__(self, n_feats, n_classes, dim_h=64, heads=8, dropout=0.5):
 		super().__init__()
-		self.gat1 = torch_geometric.nn.GATv2Conv(n_feats, dim_h, heads=heads)
-		self.gat2 = torch_geometric.nn.GATv2Conv(dim_h*heads, n_classes, heads=1)
+		self.gat1 = torch_geometric.nn.GATv2Conv(n_feats, dim_h, heads=heads, dropout=dropout)
+		self.gat2 = torch_geometric.nn.GATv2Conv(dim_h*heads, n_classes, dropout=dropout, heads=1)
 
-	def forward(self, x, edge_index, dp1=0.5, dp2=0.5):
-		x = torch.nn.functional.dropout(x, p=dp1, training=self.training)
+	def forward(self, x, edge_index):
 		x = self.gat1(x, edge_index)
 		x = torch.nn.functional.relu(x)
-		x = torch.nn.functional.dropout(x, p=dp2, training=self.training)
 		x = self.gat2(x, edge_index)
 		
 		return x
@@ -249,9 +247,9 @@ def GAT_1_step_training(model, train_loader, optimizer, criterion):
 		loss_batch.backward()
 		optimizer.step()
 		train_loss+=loss_batch.item()
-		train_f1w+=sklearn.metrics.precision_recall_fscore_support(out.argmax(dim=1).detach().numpy(), y.detach().numpy(), average="weighted")[2]
+		train_f1+=sklearn.metrics.precision_recall_fscore_support(out.argmax(dim=1).detach().numpy(), y.detach().numpy(), average="macro")[2]
 	
-	return train_loss/len(train_loader), train_f1w/len(train_loader)
+	return train_loss/len(train_loader), train_f1/len(train_loader)
 
 def GAT_validation(model, val_loader, optimizer, criterion):
 
@@ -272,12 +270,12 @@ def GAT_validation(model, val_loader, optimizer, criterion):
 	Output
 	------
 	
-	Return loss and F1W score computed on the whole validation set batch by batch
+	Return loss and F1 score computed on the whole validation set batch by batch
 	
 	'''
 		
 	device = 'cpu'
-	val_f1w=0
+	val_f1=0
 	val_loss=0
 	model.eval()
 	with torch.no_grad(): 
@@ -288,9 +286,9 @@ def GAT_validation(model, val_loader, optimizer, criterion):
 			y = batch.y[:batch.batch_size].to(device)
 			loss_batch = criterion(out, y)
 			val_loss += loss_batch.item()
-			val_f1w += sklearn.metrics.precision_recall_fscore_support(out.argmax(dim=1).detach().numpy(), y.detach().numpy(), average="weighted")[2]
+			val_f1 += sklearn.metrics.precision_recall_fscore_support(out.argmax(dim=1).detach().numpy(), y.detach().numpy(), average="weighted")[2]
 	
-	return val_loss/len(val_loader), val_f1w/len(val_loader)
+	return val_loss/len(val_loader), val_f1/len(val_loader)
 	
 def GAT_train_node_classifier(model, data, optimizer, criterion, model_name, epochs=250, patience=30):
 
@@ -321,38 +319,38 @@ def GAT_train_node_classifier(model, data, optimizer, criterion, model_name, epo
 
 	'''
 
-	best_val_f1w = -1
+	best_val_f1 = -1
 	best_epoch = -1
 	history={}
 	history["TrainLoss"]=[]
-	history["TrainF1W"]=[]
+	history["TrainF1"]=[]
 	history["ValLoss"]=[]
-	history["ValF1W"]=[]
+	history["ValF1"]=[]
 	   
 	train_loader = torch_geometric.loader.NeighborLoader(data, input_nodes=data.train_mask, num_neighbors=[3,2], batch_size=128, directed=False, shuffle=True)
 	val_loader = torch_geometric.loader.NeighborLoader(data, input_nodes=data.val_mask, num_neighbors=[3,2], batch_size=64, directed=False, shuffle=True)
 	
 	for epoch in range(1, epochs + 1):
 		### Training
-		train_loss, train_f1w = GAT_1_step_training(model, train_loader, optimizer, criterion)
+		train_loss, train_f1 = GAT_1_step_training(model, train_loader, optimizer, criterion)
 		history["TrainLoss"].append(np.around(train_loss, decimals=5))
-		history["TrainF1W"].append(np.around(train_f1w, decimals=5))
+		history["TrainF1"].append(np.around(train_f1, decimals=5))
 
 		### Validation
-		val_loss, val_f1w = GAT_validation(model, val_loader, optimizer, criterion)
+		val_loss, val_f1 = GAT_validation(model, val_loader, optimizer, criterion)
 		history["ValLoss"].append(np.around(val_loss, decimals=5))
-		history["ValF1W"].append(np.around(val_f1w, decimals=5))
+		history["ValF1"].append(np.around(val_f1, decimals=5))
 
 		### Early stopping
-		if val_f1w > best_val_f1w:
-			best_val_f1w = val_f1w
+		if val_f1 > best_val_f1:
+			best_val_f1 = val_f1
 			best_epoch = epoch
 			torch.save(model.state_dict(), model_name)
-			print(f"GAT checkpoint! Best epoch {best_epoch} | Best val loss {val_loss:.3f} | Best val F1W {best_val_f1w:.3f}", flush=True)
+			print(f"GAT checkpoint! Best epoch {best_epoch} | Best val loss {val_loss:.3f} | Best val F1 {best_val_f1:.3f}", flush=True)
 		elif epoch - best_epoch > patience:
 			model.load_state_dict(torch.load(model_name))
-			val_loss, best_val_f1w = GAT_validation(model, val_loader, optimizer, criterion)
-			print(f"GAT early stopped at epoch {epoch} with best epoch {best_epoch} | Best val loss: {val_loss:.3f} | Best val F1W: {best_val_f1w:.3f}", flush=True)
+			val_loss, best_val_f1 = GAT_validation(model, val_loader, optimizer, criterion)
+			print(f"GAT early stopped at epoch {epoch} with best epoch {best_epoch} | Best val loss: {val_loss:.3f} | Best val F1: {best_val_f1:.3f}", flush=True)
 			return model, history  
 	
 	model.load_state_dict(torch.load(model_name))
