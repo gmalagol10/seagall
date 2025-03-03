@@ -63,7 +63,7 @@ def geometrical_embedding(M, y=None, epochs=300, patience=20, path="SEAGALL", mo
 	M = scipy.sparse.csr_matrix(M, dtype="float32").toarray()
 	m = GRAE(epochs=epochs, patience=patience, n_components=int(np.around(M.shape[1]**(1/3), decimals=0)))
 
-	dataset=base_dataset.BaseDataset(M, y=y, split='none', split_ratio=1, random_state=42, labels=y)
+	dataset=grae.base_dataset.BaseDataset(M, y=y, split='none', split_ratio=1, random_state=42, labels=y)
 	train_dataset, val_dataset = dataset.validation_split(ratio=0.15)
 	del dataset
 	
