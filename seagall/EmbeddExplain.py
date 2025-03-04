@@ -28,7 +28,7 @@ from pathlib import Path
 torch.manual_seed(np.random.randint(0,10000))
 device = 'cpu'
 
-def geometrical_embedding(M, y=None, epochs=300, patience=20, path="SEAGALL", model_name="mymodel"):
+def geometrical_embedding(M, y=None, epochs=300, patience=20, path="SEAGALL", model_name="mymodel", overwrite=False):
 	'''
 	Embedding of a feature matrix preserving geometry. See https://github.com/KevinMoonLab/GRAE for more infos 
 
@@ -54,6 +54,11 @@ def geometrical_embedding(M, y=None, epochs=300, patience=20, path="SEAGALL", mo
 	Embedded matrix (N x latent space's dimension) and decoded matrix (N x F)
 
 	'''
+	if os.path.isfile(f"{path}/SEAGALL_{model_name}_GRAE.pth") == True and override == False:
+		m = GRAE(n_components=int(np.around(M.shape[1]**(1/3), decimals=0)))
+		dataset = grae.data.base_dataset.BaseDataset(M, y=y, split='none', split_ratio=1, random_state=42, labels=y)
+		return m.transform(dataset), scipy.sparse.csr_matrix(m.inverse_transform(m.transform(dataset)), dtype="float32")
+
 
 	Path(path).mkdir(parents=True, exist_ok=True)
 
@@ -65,13 +70,12 @@ def geometrical_embedding(M, y=None, epochs=300, patience=20, path="SEAGALL", mo
 
 	dataset = grae.data.base_dataset.BaseDataset(M, y=y, split='none', split_ratio=1, random_state=42, labels=y)
 	train_dataset, val_dataset = dataset.validation_split(ratio=0.15)
-	del dataset
 	
 	m.fit(train_dataset)
 	m.save(f"{path}/SEAGALL_{model_name}_GRAE.pth")
 	return m.transform(dataset), scipy.sparse.csr_matrix(m.inverse_transform(m.transform(dataset)), dtype="float32")
 
-def geometrical_graph(adata, label=None, layer="X", epochs=300, patience=20, path="SEAGALL", model_name="mymodel"):
+def geometrical_graph(adata, label=None, layer="X", epochs=300, patience=20, path="SEAGALL", model_name="mymodel", overwrite=False):
 
 	'''
 	Function to contruct the k-NN graph of the cell in GRAE's latent space
@@ -119,7 +123,7 @@ def geometrical_graph(adata, label=None, layer="X", epochs=300, patience=20, pat
 	else:
 		M=adata.layers[layer].copy()
 
-	Z = geometrical_embedding(M=M, y=y, epochs=epochs, patience=patience, path=path, model_name=model_name)
+	Z = geometrical_embedding(M=M, y=y, epochs=epochs, patience=patience, path=path, model_name=model_name, overwrite=overwrite)
 	ad_ret=sc.AnnData(Z[0])
 	sc.pp.neighbors(ad_ret, use_rep="X", method="umap")
 
