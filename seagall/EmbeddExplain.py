@@ -62,7 +62,6 @@ def geometrical_embedding(M, y=None, epochs=200, patience=20, path="SEAGALL", mo
 
 	M = scipy.sparse.csr_matrix(M, dtype="float32").toarray()
 	model = GRAE(epochs=epochs, patience=patience, n_components=int(np.around(M.shape[1]**(1/3), decimals=0)))
-	print(model.torch_module, flush=True)
 
 	dataset = grae.data.base_dataset.BaseDataset(M, y=y, split='none', split_ratio=1, random_state=42, labels=y)
 
@@ -71,7 +70,7 @@ def geometrical_embedding(M, y=None, epochs=200, patience=20, path="SEAGALL", mo
 		model.load(f"{path}/SEAGALL_{model_name}_GRAE.pth")
 		return model.transform(dataset), scipy.sparse.csr_matrix(model.inverse_transform(model.transform(dataset)), dtype="float32")
 
-
+	print(f"Fitting GRAE", flush=True)
 	train_dataset, val_dataset = dataset.validation_split(ratio=0.15)
 	model.fit(train_dataset)
 
