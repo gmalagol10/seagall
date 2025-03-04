@@ -54,7 +54,8 @@ def geometrical_embedding(M, y=None, epochs=200, patience=20, path="SEAGALL", mo
 	Embedded matrix (N x latent space's dimension) and decoded matrix (N x F)
 
 	'''
-	if os.path.isfile(f"{path}/SEAGALL_{model_name}_GRAE.pth") == True and override == False:
+
+	if os.path.isfile(f"{path}/SEAGALL_{model_name}_GRAE.pth") == True and overwrite == False:
 		print(f"I found a fitted GRAE in {path}/SEAGALL_{model_name}_GRAE.pth and I will use it", flush=True)
 		m = GRAE(n_components=int(np.around(M.shape[1]**(1/3), decimals=0)))
 		dataset = grae.data.base_dataset.BaseDataset(M, y=y, split='none', split_ratio=1, random_state=42, labels=y)
