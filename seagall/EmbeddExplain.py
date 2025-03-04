@@ -68,7 +68,7 @@ def geometrical_embedding(M, y=None, epochs=200, patience=20, path="SEAGALL", mo
 
 	if os.path.isfile(f"{path}/SEAGALL_{model_name}_GRAE.pth") == True and overwrite == False:
 		print(f"I found a fitted GRAE in {path}/SEAGALL_{model_name}_GRAE.pth and I will use it", flush=True)
-		print(m.torch_module, flush=True)
+		model.load(f"{path}/SEAGALL_{model_name}_GRAE.pth")
 		return m.transform(dataset), scipy.sparse.csr_matrix(m.inverse_transform(m.transform(dataset)), dtype="float32")
 
 
