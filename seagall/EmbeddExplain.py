@@ -55,6 +55,7 @@ def geometrical_embedding(M, y=None, epochs=200, patience=20, path="SEAGALL", mo
 
 	'''
 	if os.path.isfile(f"{path}/SEAGALL_{model_name}_GRAE.pth") == True and override == False:
+		print(f"I found a fitted GRAE in {path}/SEAGALL_{model_name}_GRAE.pth and I will use it", flush=True)
 		m = GRAE(n_components=int(np.around(M.shape[1]**(1/3), decimals=0)))
 		dataset = grae.data.base_dataset.BaseDataset(M, y=y, split='none', split_ratio=1, random_state=42, labels=y)
 		return m.transform(dataset), scipy.sparse.csr_matrix(m.inverse_transform(m.transform(dataset)), dtype="float32")
