@@ -229,13 +229,13 @@ def GAT_1_step_training(model, train_loader, optimizer, criterion):
 	Output
 	------
 	
-	Return loss and F1W score computed on the whole training set batch by batch
+	Return loss and F1 score computed on the whole training set batch by batch
 
 	'''
 
 	device = 'cpu'
 	train_loss=0
-	train_f1w=0
+	train_f1=0
 	for batch in train_loader:
 		optimizer.zero_grad()
 		batch = batch.to(device)
