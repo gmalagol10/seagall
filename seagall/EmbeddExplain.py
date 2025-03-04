@@ -66,16 +66,16 @@ def geometrical_embedding(M, y=None, epochs=200, patience=20, path="SEAGALL", mo
 
 	dataset = grae.data.base_dataset.BaseDataset(M, y=y, split='none', split_ratio=1, random_state=42, labels=y)
 
-	if os.path.isfile(f"{path}/SEAGALL_{model_name}_GRAE.pth") == True and overwrite == False:
-		print(f"I found a fitted GRAE in {path}/SEAGALL_{model_name}_GRAE.pth and I will use it", flush=True)
-		print(m.torch_module, flush=True)
-		return m.transform(dataset), scipy.sparse.csr_matrix(m.inverse_transform(m.transform(dataset)), dtype="float32")
+#	if os.path.isfile(f"{path}/SEAGALL_{model_name}_GRAE.pth") == True and overwrite == False:
+#		print(f"I found a fitted GRAE in {path}/SEAGALL_{model_name}_GRAE.pth and I will use it", flush=True)
+#		print(m.torch_module, flush=True)
+#		return m.transform(dataset), scipy.sparse.csr_matrix(m.inverse_transform(m.transform(dataset)), dtype="float32")
 
 
 	train_dataset, val_dataset = dataset.validation_split(ratio=0.15)
 	m.fit(train_dataset)
 
-	m.save(f"{path}/SEAGALL_{model_name}_GRAE.pth")
+	#m.save(f"{path}/SEAGALL_{model_name}_GRAE.pth")
 
 	return m.transform(dataset), scipy.sparse.csr_matrix(m.inverse_transform(m.transform(dataset)), dtype="float32")
 
