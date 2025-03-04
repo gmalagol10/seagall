@@ -28,7 +28,7 @@ from pathlib import Path
 torch.manual_seed(np.random.randint(0,10000))
 device = 'cpu'
 
-def geometrical_embedding(M, y=None, epochs=300, patience=20, path="SEAGALL", model_name="mymodel", overwrite=False):
+def geometrical_embedding(M, y=None, epochs=200, patience=20, path="SEAGALL", model_name="mymodel", overwrite=False):
 	'''
 	Embedding of a feature matrix preserving geometry. See https://github.com/KevinMoonLab/GRAE for more infos 
 
@@ -75,7 +75,7 @@ def geometrical_embedding(M, y=None, epochs=300, patience=20, path="SEAGALL", mo
 	m.save(f"{path}/SEAGALL_{model_name}_GRAE.pth")
 	return m.transform(dataset), scipy.sparse.csr_matrix(m.inverse_transform(m.transform(dataset)), dtype="float32")
 
-def geometrical_graph(adata, label=None, layer="X", epochs=300, patience=20, path="SEAGALL", model_name="mymodel", overwrite=False):
+def geometrical_graph(adata, label=None, layer="X", epochs=200, patience=20, path="SEAGALL", model_name="mymodel", overwrite=False):
 
 	'''
 	Function to contruct the k-NN graph of the cell in GRAE's latent space
