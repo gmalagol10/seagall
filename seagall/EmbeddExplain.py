@@ -61,23 +61,23 @@ def geometrical_embedding(M, y=None, epochs=200, patience=20, path="SEAGALL", mo
 		y=np.ones(shape=(M.shape[0],))	
 
 	M = scipy.sparse.csr_matrix(M, dtype="float32").toarray()
-	m = GRAE(epochs=epochs, patience=patience, n_components=int(np.around(M.shape[1]**(1/3), decimals=0)))
-	print(m.torch_module, flush=True)
+	model = GRAE(epochs=epochs, patience=patience, n_components=int(np.around(M.shape[1]**(1/3), decimals=0)))
+	print(model.torch_module, flush=True)
 
 	dataset = grae.data.base_dataset.BaseDataset(M, y=y, split='none', split_ratio=1, random_state=42, labels=y)
 
 	if os.path.isfile(f"{path}/SEAGALL_{model_name}_GRAE.pth") == True and overwrite == False:
 		print(f"I found a fitted GRAE in {path}/SEAGALL_{model_name}_GRAE.pth and I will use it", flush=True)
 		model.load(f"{path}/SEAGALL_{model_name}_GRAE.pth")
-		return m.transform(dataset), scipy.sparse.csr_matrix(m.inverse_transform(m.transform(dataset)), dtype="float32")
+		return model.transform(dataset), scipy.sparse.csr_matrix(model.inverse_transform(model.transform(dataset)), dtype="float32")
 
 
 	train_dataset, val_dataset = dataset.validation_split(ratio=0.15)
-	m.fit(train_dataset)
+	model.fit(train_dataset)
 
-	m.save(f"{path}/SEAGALL_{model_name}_GRAE.pth")
+	model.save(f"{path}/SEAGALL_{model_name}_GRAE.pth")
 
-	return m.transform(dataset), scipy.sparse.csr_matrix(m.inverse_transform(m.transform(dataset)), dtype="float32")
+	return model.transform(dataset), scipy.sparse.csr_matrix(model.inverse_transform(model.transform(dataset)), dtype="float32")
 
 def geometrical_graph(adata, label=None, layer="X", epochs=200, patience=20, path="SEAGALL", model_name="mymodel", overwrite=False):
 
