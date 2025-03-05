@@ -107,7 +107,8 @@ def qc_filtering(adata, omic="ATAC"):
 
 	'''
 
-
+	adata.var_names_make_unique()
+	
 	epi.pp.qc_stats(adata, verbose=False)
 		
 	if omic=="GEX":
@@ -129,12 +130,12 @@ def qc_filtering(adata, omic="ATAC"):
 		try:
 			adata=adata[adata.obs.nucleosome_signal < 2]
 		except:
-			print("Could not filter cells based on nucleosome signal")
+			print("Could not filter cells based on nucleosome signal", flush=True)
 			pass
 		try:
 			adata=adata[adata.obs.tss_enrichment_score > 2]
 		except:
-			print("Could not filter cells based on TSS enrichment")
+			print("Could not filter cells based on TSS enrichment", flush=True)
 			pass
 
 	print("Adata's shape after cells and features filtering:", adata.shape, flush=True)
@@ -171,7 +172,7 @@ def qc_filtering(adata, omic="ATAC"):
 	return adata 
  
 		
-def preprocessing(adata, target_label=None, representation=None, omic="ATAC", model_name="Pappo",):
+def preprocessing(adata, target_label=None, omic="ATAC", , path="SEAGALL", model_name="mymodel"):
 
 	'''
 	Function to create a sc-ATACseq count matrix. It's a wrapping around the main function of EpiScanpy.
@@ -182,8 +183,6 @@ def preprocessing(adata, target_label=None, representation=None, omic="ATAC", mo
 	adata : raw count matrix to process
 
 	target_label : label to take into account when splitting the dataset in train/val/test for class unbalance
-
-	representation : method to apply for DR, either None or GRAE
 
 	omic : single-cell tehconolgy used to profile cells. Either ATAC or GEX
 
@@ -201,21 +200,9 @@ def preprocessing(adata, target_label=None, representation=None, omic="ATAC", mo
 
 	adata=qc_filtering(adata, omic=omic)
 	
-	if representation is not None:	
-		if target_label is not None:
-			adata = adata[adata.obs[target_label].dropna().index]
-			adata = adata[adata.obs.groupby(target_label).filter(lambda x : len(x)>50)[target_label].index,:]
-			mymap = dict([(y, str(x)) for x,y in enumerate(sorted(set(adata.obs[target_label])))])
-			inv_map = {v : k for k, v in mymap.items()}
-			adata.uns["map"] = mymap
-			adata.uns["inv_map"] = inv_map
-			adata.obs["target"] = [mymap[x] for x in adata.obs[target_label]]
-			y = adata.obs["target"].astype(int).to_numpy()
-		else:
-			y = None
-	
-		print(f"Embedding with {representation}", flush=True)
-		ee.embbedding_and_graph(adata=adata, y=y, model_name=f"{model_name}_{representation}_DR")
+
+	print(f"Embedding with GRAE", flush=True)
+	ee.geometrical_graph(adata=adata, y=y, path="SEAGALL", model_name="mymodel")
 			
 	return adata
 
