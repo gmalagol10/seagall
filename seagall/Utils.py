@@ -172,7 +172,7 @@ def qc_filtering(adata, omic="ATAC"):
 	return adata 
  
 		
-def preprocessing(adata, target_label=None, omic="ATAC", , path="SEAGALL", model_name="mymodel"):
+def preprocessing(adata, target_label=None, omic="ATAC", path="SEAGALL", model_name="mymodel"):
 
 	'''
 	Function to create a sc-ATACseq count matrix. It's a wrapping around the main function of EpiScanpy.
