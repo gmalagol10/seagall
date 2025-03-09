@@ -247,7 +247,7 @@ def GAT_1_step_training(model, train_loader, optimizer, criterion):
 		loss_batch.backward()
 		optimizer.step()
 		train_loss+=loss_batch.item()
-		train_f1+=sklearn.metrics.precision_recall_fscore_support(out.argmax(dim=1).detach().numpy(), y.detach().numpy(), average="macro")[2]
+		train_f1+=sklearn.metrics.precision_recall_fscore_support(y.detach().numpy(), out.argmax(dim=1).detach().numpy(), average="macro")[2]
 	
 	return train_loss/len(train_loader), train_f1/len(train_loader)
 
@@ -286,7 +286,7 @@ def GAT_validation(model, val_loader, optimizer, criterion):
 			y = batch.y[:batch.batch_size].to(device)
 			loss_batch = criterion(out, y)
 			val_loss += loss_batch.item()
-			val_f1 += sklearn.metrics.precision_recall_fscore_support(out.argmax(dim=1).detach().numpy(), y.detach().numpy(), average="weighted")[2]
+			val_f1 += sklearn.metrics.precision_recall_fscore_support(y.detach().numpy(), out.argmax(dim=1).detach().numpy(), average="macro")[2]
 	
 	return val_loss/len(val_loader), val_f1/len(val_loader)
 	
