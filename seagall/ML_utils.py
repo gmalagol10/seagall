@@ -356,7 +356,7 @@ def GAT_train_node_classifier(model, data, optimizer, criterion, model_name, epo
 	model.load_state_dict(torch.load(model_name))
 	return model, history
 
-def specificty (adata, label, n_feat=50)
+def specificty (adata, label, n_feat=50):
 	gts = sorted(set(adata.obs[label]))
 	spec = pd.DataFrame(index=gts, columns=gts)
 	for gti in gts:

@@ -233,10 +233,10 @@ def classify_and_explain(adata, label, hypopt=1, n_feat=50, path="SEAGALL", mode
 				edge_mask_type='object',
 				model_config=dict(mode='multiclass_classification', task_level='node', return_type='probs'))
 				   
-	adata.layers["Importance"]=scipy.sparse.csr_matrix(explainer(x=mydata.x, edge_index=mydata.edge_index).node_mask.numpy(), dtype="float32")
+	adata.layers["SEAGALL_Importance"]=scipy.sparse.csr_matrix(explainer(x=mydata.x, edge_index=mydata.edge_index).node_mask.numpy(), dtype="float32")
 
 	for gt in sorted(set(adata.obs[label])):
-		imps = np.array(adata[adata.obs[label]==gt].layers["Importance"].mean(axis=0)).reshape(adata.shape[1], )
-		adata.var[f"Importance_for_{gt}"] = imps
-	
+		imps = np.array(adata[adata.obs[label]==gt].layers["SEAGALL_Importance"].mean(axis=0)).reshape(adata.shape[1], )
+		adata.var[f"SEAGALL_Importance_for_{gt}"] = imps
+
 	adata.uns[f"SEAGALL_Top_{n_feat}_Specificty"]=mlu.specificty(adata, label, n_feat).values.astype(float)
