@@ -9,6 +9,7 @@ import sys
 import random
 import time
 import os
+import gc
 import sklearn
 import json
 import scipy
@@ -60,6 +61,9 @@ def geometrical_embedding(M, y=None, epochs=200, patience=20, path="SEAGALL", mo
 	if y is None:
 		y=np.ones(shape=(M.shape[0],))	
 
+	torch.cuda.empty_cache()
+	gc.collect()
+	
 	M = scipy.sparse.csr_matrix(M, dtype="float32").toarray()
 	model = GRAE(epochs=epochs, patience=patience, n_components=int(np.around(M.shape[1]**(1/3), decimals=0)))
 
