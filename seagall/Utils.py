@@ -81,14 +81,13 @@ def create_count_matrix(fragments_file : str, valid_bcs : list, features_space :
 	if meta is not None:
 		adata.obs = meta.loc[adata.obs.index]
 	
-	if features_file[-10:]=="narrowPeak":
-		epi.pp.nucleosome_signal(adata, fragments_file)
-		if gtf_file != None:
-			epi.pp.tss_enrichment(adata, gtf=gtf_file, fragments=fragments_file)
+	epi.pp.nucleosome_signal(adata, fragments_file)
+	if gtf_file != None:
+		epi.pp.tss_enrichment(adata, gtf=gtf_file, fragments=fragments_file)
 
 	return adata
   
-def qc_filtering(adata, omic="ATAC"):
+def qc_filtering(adata, omic="none"):
 
 	'''
 	Function to create a sc-ATACseq count matrix. It's a wrapping around the main function of EpiScanpy.
@@ -108,12 +107,12 @@ def qc_filtering(adata, omic="ATAC"):
 	'''
 
 	adata.var_names_make_unique()
-	
+	adata.X==scipy.sparse.csr_matrix(adata.X, dtype="float32")
 	epi.pp.qc_stats(adata, verbose=False)
 		
 	if omic=="GEX":
-		adata.var["MT"] = adata.var.index.str.startswith(("MT","mt"))
-		sc.pp.calculate_qc_metrics(adata, qc_vars=['MT'], percent_top=None, log1p=False, inplace=True)
+		mt_gene_mask = np.flatnonzero([gene.startswith(("MT","mt")) for gene in adata.var.index])
+		adata.obs['mt_frac'] = np.sum(adata[:, mt_gene_mask].X, axis=1).A1/adata.obs['n_counts']
 		sc.pp.scrublet(adata)
 		
 	min_features = 10**np.quantile(adata.obs["log_n_features"], 0.05)
@@ -141,15 +140,15 @@ def qc_filtering(adata, omic="ATAC"):
 	print("Adata's shape after cells and features filtering:", adata.shape, flush=True)
 
 	if omic=="GEX":
-		max_mt = np.quantile(adata.obs["pct_counts_MT"].dropna(), 0.9)
-		adata = adata[adata.obs["pct_counts_MT"]<=max_mt]
+		max_mt = np.quantile(adata.obs["mt_frac"].dropna(), 0.9)
+		adata = adata[adata.obs["mt_frac"]<=max_mt]
 		print("Adata's shape after MT filtering:", adata.shape, flush=True)
 		
 		adata=adata[adata.obs.predicted_doublet==False]
 		print("Adata's shape after doublets filtering:", adata.shape, flush=True)
    
 	sc.pp.highly_variable_genes(adata, flavor='seurat_v3')
-
+	adata.layers["counts"]	= adata.X.copy()
 	sc.pp.normalize_total(adata)
 		
 	if omic=="GEX":
@@ -163,16 +162,17 @@ def qc_filtering(adata, omic="ATAC"):
 
 	print("Adata's shape after HVG filtering:", adata.shape, flush=True)
 	
-	sc.pp.log1p(adata)
+	if omic=="GEX":	
+		sc.pp.log1p(adata)
 
 	adata = adata[:, adata.X.max(axis=0)>0]
 	adata = adata[adata.X.max(axis=1)>0]
-	print("Adata's shape after max 0 filtering:", adata.shape, flush=True)
+	print("Adata's final shape:", adata.shape, flush=True)
 	   
 	return adata 
  
 		
-def preprocessing(adata, target_label=None, omic="ATAC", path="SEAGALL", model_name="mymodel"):
+def preprocessing(adata, target_label=None, omic="none", path="SEAGALL", model_name="MySEAGALL"):
 
 	'''
 	Filtering and QC
@@ -202,7 +202,7 @@ def preprocessing(adata, target_label=None, omic="ATAC", path="SEAGALL", model_n
 	
 
 	print(f"Embedding with GRAE", flush=True)
-	ee.geometrical_graph(adata=adata, y=y, path="SEAGALL", model_name="mymodel")
+	ee.geometrical_graph(adata=adata, y=y, path=path, model_name=model_name)
 			
 	return adata
 
