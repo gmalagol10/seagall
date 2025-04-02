@@ -202,8 +202,6 @@ def preprocessing(adata, target_label=None, omic="none", path="SEAGALL", model_n
 	print(f"Embedding with GRAE", flush=True)
 	ee.geometrical_graph(adata=adata, target_label=target_label, path=path, model_name=model_name)
 			
-	return adata
-
   
    
 def intersection(l):
