@@ -237,6 +237,7 @@ def classify_and_explain(adata, label, hypopt=1, n_feat=50, path="SEAGALL", mode
 					return_type='probs',),)
 				   
 	explanation = explainer(x=mydata.x, edge_index=mydata.edge_index)
+		
 
 	feat_imp_matrix = pd.DataFrame(explanation.node_mask, index=adata.obs.index, columns=adata.var.index)
 	for gt in sorted(set(adata.obs[label])):

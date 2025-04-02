@@ -175,14 +175,14 @@ def qc_filtering(adata, omic="ATAC"):
 def preprocessing(adata, target_label=None, omic="ATAC", path="SEAGALL", model_name="mymodel"):
 
 	'''
-	Function to create a sc-ATACseq count matrix. It's a wrapping around the main function of EpiScanpy.
+	Filtering and QC
 
  	Parameters
     ----------
 
 	adata : raw count matrix to process
 
-	target_label : label to take into account when splitting the dataset in train/val/test for class unbalance
+	target_label : label to take into account when splitting the dataset in train/val/test in case of class unbalance
 
 	omic : single-cell tehconolgy used to profile cells. Either ATAC or GEX
 
