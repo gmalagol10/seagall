@@ -78,7 +78,7 @@ def geometrical_embedding(M, y=None, epochs=200, patience=20, path="SEAGALL", mo
 
 	return model.transform(dataset), scipy.sparse.csr_matrix(model.inverse_transform(model.transform(dataset)), dtype="float32")
 
-def geometrical_graph(adata, label=None, layer="X", epochs=200, patience=20, path="SEAGALL", model_name="mymodel", overwrite=False):
+def geometrical_graph(adata, target_label=None, layer="X", epochs=200, patience=20, path="SEAGALL", model_name="mymodel", overwrite=False):
 
 	'''
 	Function to contruct the k-NN graph of the cell in GRAE's latent space
@@ -88,7 +88,7 @@ def geometrical_graph(adata, label=None, layer="X", epochs=200, patience=20, pat
 
 	adata : count matrix of class AnnData
 	
-	label : target label, important for the train-val split of cells accounting for label unbalance, default = None
+	target_label : target label, important for the train-val split of cells accounting for label unbalance, default = None
 
 	layer : layer to embed, default = "X"
 
@@ -109,13 +109,13 @@ def geometrical_graph(adata, label=None, layer="X", epochs=200, patience=20, pat
 	'''
 	adata.var_names_make_unique()
 
-	if label is not None:
-		adata.obs[label].astype(str).replace("nan","unknown")
-		mymap = dict([(y,str(x)) for x,y in enumerate(sorted(set(adata.obs[label])))])
+	if target_label is not None:
+		adata.obs[target_label].astype(str).replace("nan","unknown")
+		mymap = dict([(y,str(x)) for x,y in enumerate(sorted(set(adata.obs[labetarget_labell])))])
 		inv_map = {v: k for k, v in mymap.items()}
 		adata.uns["map"]=mymap
 		adata.uns["inv_map"]=inv_map
-		adata.obs["target"]=[mymap[x] for x in adata.obs[label]]
+		adata.obs["target"]=[mymap[x] for x in adata.obs[target_label]]
 		adata.obs["target"]=adata.obs["target"].astype(int)
 		y=np.array(adata.obs["target"]).astype(int)
 	else:
@@ -133,7 +133,7 @@ def geometrical_graph(adata, label=None, layer="X", epochs=200, patience=20, pat
 	adata.obsp[f"GRAE_graph"], adata.obsm["GRAE_latent_space"], adata.layers[f"GRAE_decoded_matrix"]  = scipy.sparse.csr_matrix(ad_ret.obsp["connectivities"], dtype="float32"), Z[0], Z[1]
 
 
-def classify_and_explain(adata, label, hypopt=1, n_feat=50, path="SEAGALL", model_name="mymodel"):
+def classify_and_explain(adata, target_label, hypopt=1, n_feat=50, path="SEAGALL", model_name="mymodel"):
 
 	'''
 	Function to extract the relevant features
@@ -143,7 +143,7 @@ def classify_and_explain(adata, label, hypopt=1, n_feat=50, path="SEAGALL", mode
 
 	adata : count matrix of class AnnData
 	
-	label : target label
+	target_label : target label
 
 	hypopt : fraction of cells to use to run HPO, default 1 (all the cells) 0 for not run it
 
@@ -157,20 +157,20 @@ def classify_and_explain(adata, label, hypopt=1, n_feat=50, path="SEAGALL", mode
 	------
 	
 	AnnData object with importance of each feature for each class in .var and predictions infos in .obs
-	The classifier is saved in {path}/SEAGALL_{model_name}_{label}
+	The classifier is saved in {path}/SEAGALL_{model_name}_{target_label}
 
 	'''
 
 	Path(path).mkdir(parents=True, exist_ok=True)
-	path=f"{path}/SEAGALL_{model_name}_{label}"
+	path=f"{path}/SEAGALL_{model_name}_{target_label}"
 
-	adata.obs[label]=np.array(adata.obs[label].astype(str).replace("nan","unknown"))
+	adata.obs[target_label]=np.array(adata.obs[target_label].astype(str).replace("nan","unknown"))
 	adata.var_names_make_unique()
-	mymap = dict([(y,str(x)) for x,y in enumerate(sorted(set(adata.obs[label])))])
+	mymap = dict([(y,str(x)) for x,y in enumerate(sorted(set(adata.obs[target_label])))])
 	inv_map = {v: k for k, v in mymap.items()}
 	adata.uns["map"]=mymap
 	adata.uns["inv_map"]=inv_map
-	adata.obs["target"]=[mymap[x] for x in adata.obs[label]]
+	adata.obs["target"]=[mymap[x] for x in adata.obs[target_label]]
 		
 	if hypopt > 0:
 		print(time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()), "Looking for HPO file", flush=True)
@@ -178,7 +178,7 @@ def classify_and_explain(adata, label, hypopt=1, n_feat=50, path="SEAGALL", mode
 
 		if os.path.isfile(f"{hpo_path}.json") == False:
 			print(time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()), f"No HPO .json found --> Running HPO using {int(100*hypopt)}% of the cells", flush=True)
-			mydata = mlu.create_pyg_dataset(adata, label, hypopt)
+			mydata = mlu.create_pyg_dataset(adata, target_label, hypopt)
 			mydata = torch_geometric.transforms.RandomNodeSplit(num_val=0.2, num_test=0)(mydata)
 			study = hpo.run_HPO_GAT(mydata, hpo_path)
 			
@@ -192,14 +192,14 @@ def classify_and_explain(adata, label, hypopt=1, n_feat=50, path="SEAGALL", mode
 				print(f"Best value for {key} is {value}", flush=True)	
 		
 		print(time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()), "Creating dataset", flush=True)
-		mydata = mlu.create_pyg_dataset(adata, label)
+		mydata = mlu.create_pyg_dataset(adata, target_label)
 		mydata = torch_geometric.transforms.RandomNodeSplit(num_val=0.15, num_test=0.15)(mydata)
 		model = mlu.GAT(n_feats=mydata.num_features, n_classes=mydata.num_classes, dim_h=best_params["dim_h"], heads=best_params["heads"]).to(device)
 		optimizer_model = torch.optim.Adam(model.parameters(), lr=best_params["lr"], weight_decay=best_params["weight_decay"])
 
 	else:
 		print(time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()), "Creating dataset, no HPO", flush=True)
-		mydata = mlu.create_pyg_dataset(adata, label)
+		mydata = mlu.create_pyg_dataset(adata, target_label)
 		mydata = torch_geometric.transforms.RandomNodeSplit(num_val=0.15, num_test=0.15)(mydata)
 		model = mlu.GAT(n_feats=mydata.num_features, n_classes=mydata.num_classes).to(device)
 		optimizer_model = torch.optim.Adam(model.parameters(), lr=1e-3, weight_decay=1e-3)
@@ -235,8 +235,8 @@ def classify_and_explain(adata, label, hypopt=1, n_feat=50, path="SEAGALL", mode
 				   
 	adata.layers["SEAGALL_Importance"]=scipy.sparse.csr_matrix(explainer(x=mydata.x, edge_index=mydata.edge_index).node_mask.numpy(), dtype="float32")
 
-	for gt in sorted(set(adata.obs[label])):
-		imps = np.array(adata[adata.obs[label]==gt].layers["SEAGALL_Importance"].mean(axis=0)).reshape(adata.shape[1], )
+	for gt in sorted(set(adata.obs[target_label])):
+		imps = np.array(adata[adata.obs[target_label]==gt].layers["SEAGALL_Importance"].mean(axis=0)).reshape(adata.shape[1], )
 		adata.var[f"SEAGALL_Importance_for_{gt}"] = imps
 
-	adata.uns[f"SEAGALL_Top_{n_feat}_Specificty"]=mlu.specificty(adata, label, n_feat).values.astype(float)
+	adata.uns[f"SEAGALL_Top_{n_feat}_Specificty"]=mlu.specificty(adata, target_label, n_feat).values.astype(float)
