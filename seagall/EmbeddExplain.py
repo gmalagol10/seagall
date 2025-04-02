@@ -250,4 +250,4 @@ def classify_and_explain(adata, label, hypopt=1, n_feat=50, path="SEAGALL", mode
 			fsi = adata[adata.obs[label]==gti].var[f"Importance_for_{gti}"].sort_values()[::-1][:int(n_feat)].index
 			fsj = adata[adata.obs[label]==gtj].var[f"Importance_for_{gtj}"].sort_values()[::-1][:int(n_feat)].index
 			jc.at[gti, gtj] = len(ut.intersection([fsi, fsj]))/len(ut.flat_list([fsi, fsj]))
-	jc.to_csv(f"{path}_Top{str(n_feat)}Features_Jaccard.tsv.gz", sep="\t", compression="gzip")
+	adata.uns["SEAGALL_Top{str(n_feat)}Feats_Specificity"]=jc
