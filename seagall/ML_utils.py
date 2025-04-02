@@ -355,3 +355,13 @@ def GAT_train_node_classifier(model, data, optimizer, criterion, model_name, epo
 	
 	model.load_state_dict(torch.load(model_name))
 	return model, history
+
+def specificty (adata, label, n_feat=50)
+	gts = sorted(set(adata.obs[label]))
+	spec = pd.DataFrame(index=gts, columns=gts)
+	for gti in gts:
+		for gtj in gts[gts.index(gti)+1:]:
+		    fsi = adata[adata.obs[label]==gti].var[f"Importance_for_{gti}"].sort_values()[::-1][:int(n_feat)].index
+		    fsj = adata[adata.obs[label]==gtj].var[f"Importance_for_{gtj}"].sort_values()[::-1][:int(n_feat)].index
+		    spec.at[gti, gtj] = len(ut.intersection([fsi, fsj]))/len(ut.flat_list([fsi, fsj]))
+	return spec

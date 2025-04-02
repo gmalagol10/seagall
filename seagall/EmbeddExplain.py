@@ -227,28 +227,16 @@ def classify_and_explain(adata, label, hypopt=1, n_feat=50, path="SEAGALL", mode
 	print(time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()), "XAI features extraction", flush=True)
 	explainer = torch_geometric.explain.Explainer(
 				model=model,
-				algorithm=torch_geometric.explain.GNNExplainer(epochs=200),
+				algorithm=torch_geometric.explain.GNNExplainer(epochs=300),
 				explanation_type='model',
 				node_mask_type='attributes',
 				edge_mask_type='object',
-				model_config=dict(
-					mode='multiclass_classification',
-					task_level='node',
-					return_type='probs',),)
+				model_config=dict(mode='multiclass_classification', task_level='node', return_type='probs'))
 				   
-	explanation = explainer(x=mydata.x, edge_index=mydata.edge_index)
-		
+	adata.layers["Importance"]=scipy.sparse.csr_matrix(explainer(x=mydata.x, edge_index=mydata.edge_index).node_mask.numpy(), dtype="float32")
 
-	feat_imp_matrix = pd.DataFrame(explanation.node_mask, index=adata.obs.index, columns=adata.var.index)
 	for gt in sorted(set(adata.obs[label])):
-		imps = np.array(feat_imp_matrix.loc[adata[adata.obs[label]==gt].obs.index].mean(axis=0))
-		adata.var[f"Importance_for_{gt}"] = imps
-
-	gts = sorted(set(adata.obs[label]))
-	jc = pd.DataFrame(index=gts, columns=gts)
-	for gti in gts:
-		for gtj in gts[gts.index(gt)+1:]:
-			fsi = adata[adata.obs[label]==gti].var[f"Importance_for_{gti}"].sort_values()[::-1][:int(n_feat)].index
-			fsj = adata[adata.obs[label]==gtj].var[f"Importance_for_{gtj}"].sort_values()[::-1][:int(n_feat)].index
-			jc.at[gti, gtj] = len(ut.intersection([fsi, fsj]))/len(ut.flat_list([fsi, fsj]))
-	adata.uns["SEAGALL_Top{str(n_feat)}Feats_Specificity"]=jc
+    	imps = np.array(adata[adata.obs[label]==gt].layers["Importance"].mean(axis=0)).reshape(adata.shape[1], )
+    	adata.var[f"Importance_for_{gt}"] = imps
+	
+	adata.uns[f"SEAGALL_Top_{n_feat}_Specificty"]=mlu.specificty(adata, label, n_feat).values.astype(float)
