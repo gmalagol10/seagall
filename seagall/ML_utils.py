@@ -355,5 +355,3 @@ def GAT_train_node_classifier(model, data, optimizer, criterion, model_name, epo
 	
 	model.load_state_dict(torch.load(model_name))
 	return model, history
-
-def specificity (explnantions, n_feats=50)
