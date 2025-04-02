@@ -147,7 +147,7 @@ def qc_filtering(adata, omic="none"):
 		adata=adata[adata.obs.predicted_doublet==False]
 		print("Adata's shape after doublets filtering:", adata.shape, flush=True)
    
-	sc.pp.highly_variable_genes(adata, flavor='seurat_v3')
+	sc.pp.highly_variable_genes(adata, flavor='seurat_v3', span=1)
 	adata.layers["counts"]	= adata.X.copy()
 	sc.pp.normalize_total(adata)
 		
