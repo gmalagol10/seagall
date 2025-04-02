@@ -70,7 +70,7 @@ def geometrical_embedding(M, y=None, epochs=200, patience=20, path="SEAGALL", mo
 	dataset = grae.data.base_dataset.BaseDataset(M, y=y, split='none', split_ratio=1, random_state=42, labels=y)
 
 	if os.path.isfile(f"{path}/SEAGALL_{model_name}_GRAE.pth") == True and overwrite == False:
-		print(f"--> {path}/SEAGALL_{model_name}_GRAE.pth is a fitted GRAE model, I will use it! <--", flush=True)
+		print(f"--> {path}/SEAGALL_{model_name}_GRAE.pth is a GRAE model, I will use it! <--", flush=True)
 		model.load(f"{path}/SEAGALL_{model_name}_GRAE.pth")
 		return model.transform(dataset), scipy.sparse.csr_matrix(model.inverse_transform(model.transform(dataset)), dtype="float32")
 
@@ -99,7 +99,6 @@ def geometrical_graph(adata, target_label=None, layer="X", epochs=200, patience=
 	epochs : number of epoch to train the GRAE for, default = 300
 
 	patience : early stopping threshold, default = 20
-
 
 	path : folder where to save the model, default =  SEAGALL
 
