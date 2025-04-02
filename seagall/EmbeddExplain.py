@@ -111,7 +111,7 @@ def geometrical_graph(adata, target_label=None, layer="X", epochs=200, patience=
 
 	if target_label is not None:
 		adata.obs[target_label].astype(str).replace("nan","unknown")
-		mymap = dict([(y,str(x)) for x,y in enumerate(sorted(set(adata.obs[labetarget_labell])))])
+		mymap = dict([(y,str(x)) for x,y in enumerate(sorted(set(adata.obs[target_label])))])
 		inv_map = {v: k for k, v in mymap.items()}
 		adata.uns["map"]=mymap
 		adata.uns["inv_map"]=inv_map
