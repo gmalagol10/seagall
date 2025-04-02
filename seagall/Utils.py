@@ -168,9 +168,7 @@ def qc_filtering(adata, omic="none"):
 	adata = adata[:, adata.X.max(axis=0)>0]
 	adata = adata[adata.X.max(axis=1)>0]
 	print("Adata's final shape:", adata.shape, flush=True)
-	   
-	return adata 
- 
+
 		
 def preprocessing(adata, target_label=None, omic="none", path="SEAGALL", model_name="MySEAGALL"):
 
@@ -198,7 +196,7 @@ def preprocessing(adata, target_label=None, omic="none", path="SEAGALL", model_n
 
 	print("QC and filtering", flush=True)
 
-	adata=qc_filtering(adata, omic=omic)
+	qc_filtering(adata, omic=omic)
 	
 
 	print(f"Embedding with GRAE", flush=True)
