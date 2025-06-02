@@ -25,7 +25,6 @@ import seagall as sgl
 import pandas as pd
 import scanpy as sc
 import matplotlib.pyplot as plt
-%matplotlib inline
 
 adata=sc.read_h5ad("MouseBrain_GEX.h5ad")
 
