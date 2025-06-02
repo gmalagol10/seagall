@@ -277,9 +277,9 @@ def create_pyg_dataset(adata: sc.AnnData, label: str, size: float = 1.0) -> torc
     if adj is None:
         raise KeyError("GRAE_graph adjacency matrix not found in adata.obsp")
 
-    edges_df = pd.DataFrame(adj.toarray())
-        .rename_axis("Source")
-        .reset_index()
+    edges_df = pd.DataFrame(adj.toarray())\
+        .rename_axis("Source")\
+        .reset_index()\
         .melt("Source", value_name="Weight", var_name="Target")
     edges_df = edges_df.query("Source != Target and Weight != 0").reset_index(drop=True)
 
