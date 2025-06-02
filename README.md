@@ -4,7 +4,9 @@
 
 
 Single-cell Explainable geometry Aware Graph Attention Learning pipeLine. Tool from the paper:
+
 Geometry aware graph attention networks to explain single-cell chromatin state and gene expression
+
 Gabriele Malagoli, Patrick Hanel, Anna Danese, Guy Wolf, Maria Colome-Tatche
 bioRxiv 2025.05.29.656611; doi: https://doi.org/10.1101/2025.05.29.656611
 
