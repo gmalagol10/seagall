@@ -19,7 +19,7 @@ conda create -n my_env python=3.10.14
 
 conda activate my_env
 
-pip install git+https://github.com/gmalagol10/seagall --force-reinstall --upgrade --no-deps
+pip install git+https://github.com/gmalagol10/seagall
 ```
 
 ## Usage
