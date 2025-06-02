@@ -40,8 +40,7 @@ def geometrical_embedding(
     patience: int = 30, 
     path: str = "SEAGALL", 
     model_name: str = "mymodel", 
-    overwrite: bool = False
-) -> tuple
+    overwrite: bool = False) -> tuple:
     """
     Compute a geometry-preserving embedding of a feature matrix using GRAE.
 
@@ -127,8 +126,7 @@ def geometrical_graph(
     patience: int = 30,
     path: str = "SEAGALL",
     model_name: str = "mymodel",
-    overwrite: bool = False
-) -> None:
+    overwrite: bool = False) -> None:
     """
     Construct a k-NN graph of cells in the latent space of the GRAE model.
 
