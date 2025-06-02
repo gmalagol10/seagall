@@ -21,7 +21,6 @@ pip install git+https://github.com/gmalagol10/seagall --force-reinstall --upgrad
 
 ```python
 import seagall as sgl
-import pandas as pd
 import scanpy as sc
 import matplotlib.pyplot as plt
 
