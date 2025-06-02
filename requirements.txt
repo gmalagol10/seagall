@@ -5,6 +5,7 @@ h5py
 scipy
 pandas
 scikit-learn
+grae @ https://github.com/KevinMoonLab/GRAE.git
 scanpy==1.10.1
 torch==2.6.0
 torch_geometric==2.5.2
