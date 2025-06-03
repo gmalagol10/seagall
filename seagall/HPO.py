@@ -21,7 +21,7 @@ def HPO_TrainModel_GAT(model, data, model_name, trial, param):
 	Operative function to apply HPO
 
 	Parameters
-    ----------
+	----------
 	model : object of class torch.nn.Module
 
 	data : object of class torch_geometric.data.Data storing thw whole count matrix. See EmbeddExplain.classify_and_explain to see how the data object is built
@@ -70,7 +70,7 @@ def build_GAT(trial, data):
 	Define model to which apply HPO
 
 	Parameters
-    ----------
+	----------
 
 	trial : object of class optuna.trial.Trial to evaluate the objective function
 
@@ -97,7 +97,7 @@ def objective_GAT(trial, data, model, model_name):
 	Define objective function to maximise. For a classification problem is the weighted-F1
 
 	Parameters
-    ----------
+	----------
 
 	trial : object of class optuna.trial.Trial to evaluate the objective function
 
@@ -126,7 +126,7 @@ def run_HPO_GAT(data, model_name):
 	Apply HPO to GAT model
 
  	Parameters
-    ----------
+	----------
 
 	data : object of class torch_geometric.data.Data storing thw whole count matrix. See Ml_utils.create_pyg_dataset for the building of the data object
 	model_name : name to use to save the model during the training
