@@ -207,7 +207,7 @@ def geometrical_graph(
 
 
 
-def def classify_and_explain(adata, target_label: str, hypopt: float = 1.0, n_feat: int = 50, path: str = "SEAGALL", model_name: str = "mymodel"):
+def classify_and_explain(adata, target_label: str, hypopt: float = 1.0, n_feat: int = 50, path: str = "SEAGALL", model_name: str = "mymodel"):
 	"""
 	Trains a GAT classifier on an AnnData object, optionally performs HPO, and explains predictions using GNNExplainer.
 
