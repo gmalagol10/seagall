@@ -2,6 +2,7 @@
 from . import ML_utils as mlu
 from . import Utils as ut
 from . import HPO as hpo
+from grae.models import GRAE
 
 # Standard library imports
 import os
