@@ -7,7 +7,7 @@ import networkx as nx
 
 import time
 import scipy
-import scvi
+#import scvi
 
 import sklearn
 

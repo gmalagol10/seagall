@@ -1,8 +1,3 @@
-"""Modules to use the loss from the Topological Autoencoders paper from Moor & al.
-
-Copied from their source code. Available here : https://github.com/BorgwardtLab/topological-autoencoders"""
-
-
 '''
 Methods for calculating lower-dimensional persistent homology.
 '''
