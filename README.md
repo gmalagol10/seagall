@@ -25,16 +25,21 @@ pip install git+https://github.com/gmalagol10/seagall
 import seagall as sgl
 import scanpy as sc
 import matplotlib.pyplot as plt
+import distinctipy
 
+#Upload filtered count matrix from scRNA-seq, scATAC-seq or scChIP-seq experiment, 
 adata=sc.read_h5ad("MouseBrain_GEX.h5ad")
 
 sgl.ee.geometrical_graph(adata, target_label="CellType", path="SEAGALL")
 
 sgl.ee.classify_and_explain(adata, target_label="CellType", path="SEAGALL", hypopt=0.25)
 
+#Show the rank-importance plot for each label
+colors=distinctipy.get_colors(len(set(adata.obs.CellType)))
+
 for i, ct in enumerate(sorted(list(set(adata.obs.CellType)))):
     print(i)
-    plt.scatter(x=range(0, len(adata.var)), y=sorted(adata.var[f"SEAGALL_Importance_for_{ct}"])[::-1], c=colors_to_use_bright[i])
+    plt.scatter(x=range(0, len(adata.var)), y=sorted(adata.var[f"SEAGALL_Importance_for_{ct}"])[::-1], c=colors[i])
 plt.xscale("log")
 plt.yscale("log")
 ```
