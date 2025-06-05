@@ -27,7 +27,7 @@ import scanpy as sc
 import matplotlib.pyplot as plt
 import distinctipy
 
-#Upload filtered count matrix from scRNA-seq, scATAC-seq or scChIP-seq experiment, 
+#Upload filtered count matrix from scRNA-seq, scATAC-seq or scChIP-seq experiment
 adata=sc.read_h5ad("MouseBrain_GEX.h5ad")
 
 sgl.ee.geometrical_graph(adata, target_label="CellType", path="SEAGALL")
