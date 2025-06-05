@@ -2,7 +2,8 @@
 from . import ML_utils as mlu
 from . import Utils as ut
 from . import HPO as hpo
-from grae.models import GRAE
+from Models import GRAE
+from base_dataset import DEVICE, BaseDataset
 
 # Standard library imports
 import os
@@ -27,7 +28,7 @@ import scanpy as sc
 
 torch.manual_seed(np.random.randint(0,10000))
 # Device setup
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 
 import logging
 logger = logging.getLogger(__name__)
@@ -278,15 +279,15 @@ def classify_and_explain(adata, target_label: str, hypopt: float = 1.0, n_feat: 
 
 	# Model initialization
 	if best_params:
-		model = mlu.GAT(n_feats=data.num_features, n_classes=data.num_classes, dim_h=best_params["dim_h"], heads=best_params["heads"]).to(device)
+		model = mlu.GAT(n_feats=data.num_features, n_classes=data.num_classes, dim_h=best_params["dim_h"], heads=best_params["heads"]).to(DEVICE)
 		optimizer = torch.optim.Adam(model.parameters(), lr=best_params["lr"], weight_decay=best_params["weight_decay"])
 	else:
-		model = mlu.GAT(n_feats=data.num_features, n_classes=data.num_classes).to(device)
+		model = mlu.GAT(n_feats=data.num_features, n_classes=data.num_classes).to(DEVICE)
 		optimizer = torch.optim.Adam(model.parameters(), lr=1e-3, weight_decay=1e-3)
 
 	# Loss setup
 	class_weights = compute_class_weight(class_weight="balanced", classes=np.unique(data.y), y=data.y.numpy())
-	class_weights_tensor = torch.tensor(class_weights, dtype=torch.float, device=device)
+	class_weights_tensor = torch.tensor(class_weights, dtype=torch.float, DEVICE=DEVICE)
 	criterion = torch.nn.CrossEntropyLoss(weight=class_weights_tensor)
 
 	# Train the model

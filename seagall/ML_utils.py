@@ -20,7 +20,7 @@ import logging
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+from base_dataset import DEVICE
 
 
 class GAT(torch.nn.Module):
@@ -324,7 +324,7 @@ def GAT_1_step_training(model: torch.nn.Module, train_loader: DataLoader,
 
 	for batch in train_loader:
 		optimizer.zero_grad()
-		batch = batch.to(device)
+		batch = batch.to(DEVICE)
 		out = model(batch.x, batch.edge_index)[: batch.batch_size]
 
 		y_true = batch.y[: batch.batch_size]
@@ -367,7 +367,7 @@ def GAT_validation(model: torch.nn.Module, val_loader: DataLoader, criterion: to
 
 	with torch.no_grad():
 		for batch in val_loader:
-			batch = batch.to(device)
+			batch = batch.to(DEVICE)
 			out = model(batch.x, batch.edge_index)[: batch.batch_size]
 
 			y_true = batch.y[: batch.batch_size]

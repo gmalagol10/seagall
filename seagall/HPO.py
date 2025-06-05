@@ -13,7 +13,7 @@ import optuna
 import torch
 import torch_geometric
 
-device = 'cpu'
+from base_dataset import DEVICE
 # ++++++++++++++++++++++++++++++ GAT
 def HPO_TrainModel_GAT(model, data, model_name, trial, param):
 
@@ -87,7 +87,7 @@ def build_GAT(trial, data):
 	dim_h = trial.suggest_int('dim_h', low=32, high=512, step=32)
 	heads = trial.suggest_int('heads', low=1, high=20, step=2)
 	dropout = trial.suggest_float('dropout', low=0.1, high=0.7, step=0.1)
-	model = mlu.GAT(n_feats=data.num_features, n_classes=data.num_classes, dim_h=dim_h, heads=heads, dropout=dropout).to(device)
+	model = mlu.GAT(n_feats=data.num_features, n_classes=data.num_classes, dim_h=dim_h, heads=heads, dropout=dropout).to(DEVICE)
 	
 	return model
 
