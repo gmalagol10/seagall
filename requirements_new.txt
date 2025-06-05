@@ -1,7 +1,4 @@
-numpy
-numba
-anndata
-h5py
+pysam
 scipy
 pandas
 scikit-learn
@@ -13,6 +10,4 @@ torch-scatter=2.1.1
 torchvision=0.21.0
 phate
 optuna
-biopython
-pyjaspar
 distinctipy
