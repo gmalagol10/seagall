@@ -14,5 +14,4 @@ torchvision
 phate
 optuna
 biopython
-pyjaspar
 distinctipy
