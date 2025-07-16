@@ -54,9 +54,6 @@ def HPO_TrainModel_GAT(model, data, model_name, trial, param):
 
 		### Validation
 		val_loss, val_f1 = mlu.GAT_validation(model, val_loader, criterion)
-		
-		if epoch % 10 == 0:
-			print(f"Epoch {epoch} | Validation loss {val_loss:.3f} | Validation F1 {val_f1:.3f}", flush=True)
 
 		trial.report(val_f1, epoch)
 		if trial.should_prune():
