@@ -41,8 +41,8 @@ class AE(base_model.BaseModel):
 				 random_state=base_model.SEED,
 				 latent_dim=2,
 				 hidden_dims=HIDDEN_DIMS,
-				 conv_dims=CONV_DIMS,
-				 conv_fc_dims=CONV_FC_DIMS,
+				 conv_dims=[],
+				 conv_fc_dims=[],
 				 noise=0,
 				 train_mask=None,
 				 patience=30,
@@ -122,18 +122,6 @@ class AE(base_model.BaseModel):
 												  noise=self.noise,
 												  vae=vae,
 												  sigmoid=sigmoid)
-		elif len(data_shape) == 3:
-			in_channel, height, width = data_shape
-			#  Samples are 3D tensors (i.e. images). Convolutional case.
-			self.torch_module = torch_modules.ConvAutoencoderModule(H=height,
-													  W=width,
-													  input_channel=in_channel,
-													  channel_list=self.conv_dims,
-													  hidden_dims=self.conv_fc_dims,
-													  z_dim=self.latent_dim,
-													  noise=self.noise,
-													  vae=vae,
-													  sigmoid=sigmoid)
 		else:
 			raise Exception(f'Invalid channel number. X has {len(data_shape)}')
 
