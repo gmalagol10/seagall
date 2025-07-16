@@ -87,8 +87,8 @@ def process_target_label(adata: sc.AnnData, target_label: str) -> None:
 
 	# Create sorted list of unique labels and mappings
 	unique_labels = sorted(adata.obs[target_label].unique())
-	label_map = {label: i for i, label in enumerate(unique_labels)}
-	inv_map = {i: label for label, i in label_map.items()}
+	label_map = {label: str(i) for i, label in enumerate(unique_labels)}
+	inv_map = {str(i): label for label, i in label_map.items()}
 
 	# Store mappings in adata.uns
 	adata.uns["map"] = label_map
