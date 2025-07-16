@@ -246,7 +246,7 @@ def classify_and_explain(adata, target_label: str, hypopt: float = 1.0, n_feat: 
 	adata.var_names_make_unique()
 	labels = sorted(set(adata.obs[target_label]))
 	label_map = {label: str(idx) for idx, label in enumerate(labels)}
-	inv_label_map = {v: k for k, v in label_map.items()}
+	inv_label_map = {str(v): k for k, v in label_map.items()}
 	adata.uns["map"] = label_map
 	adata.uns["inv_map"] = inv_label_map
 	adata.obs["target"] = [label_map[label] for label in adata.obs[target_label]]

@@ -285,7 +285,7 @@ def create_pyg_dataset(adata: sc.AnnData, label: str, size: float = 1.0) -> torc
 
 	x_tensor = torch.tensor(scipy.sparse.csr_matrix(ad.X, dtype="float32").toarray(), dtype=torch.float32)
 	edge_index_tensor = torch.tensor(edges_df[["Source", "Target"]].astype(int).to_numpy().T, dtype=torch.long)
-	y_tensor = torch.from_numpy(ad.obs[label].to_numpy().astype(int)).long()
+	y_tensor = torch.from_numpy(ad.obs["target"].to_numpy().astype(int)).long()
 
 	mydata = torch_geometric.data.Data(x=x_tensor, edge_index=edge_index_tensor, y=y_tensor)
 	mydata.num_features = mydata.x.shape[1]
