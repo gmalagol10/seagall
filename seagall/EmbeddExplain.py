@@ -100,7 +100,7 @@ def geometrical_embedding(
 
 	# Initialize model
 	latent_dim = int(np.round(M.shape[1] ** (1/3)))
-	model = GRAE(epochs=epochs, patience=patience, latent_dim=latent_dim)
+	model = GRAE(epochs=epochs, patience=patience, latent_dim=latent_dim, write_path=path)
 
 	# Prepare dataset
 	dataset = BaseDataset(M, y=y, split='none', split_ratio=1, random_state=42, labels=y)
