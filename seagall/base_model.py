@@ -7,7 +7,7 @@ from sklearn.metrics import mean_squared_error
 import base_dataset
 
 SEED = 42
-from base_dataset import DEVICE
+from .base_dataset import DEVICE
 
 class BaseModel:
 	"""All models should subclass BaseModel."""
