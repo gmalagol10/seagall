@@ -82,6 +82,7 @@ def process_target_label(adata: sc.AnnData, target_label: str) -> None:
 		Also adds forward and inverse label mappings in `adata.uns`.
 	"""
 	# Replace NaNs and ensure string type
+	adata.obs[target_label] = adata.obs[target_label].astype(str)
 	adata.obs[target_label] = adata.obs[target_label].fillna("unknown").astype(str)
 
 	# Create sorted list of unique labels and mappings
