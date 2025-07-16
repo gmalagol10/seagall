@@ -99,8 +99,8 @@ def geometrical_embedding(
 	M = sparse.csr_matrix(M, dtype=np.float32).toarray()
 
 	# Initialize model
-	n_components = int(np.round(M.shape[1] ** (1/3)))
-	model = GRAE(epochs=epochs, patience=patience, n_components=n_components)
+	latent_dim = int(np.round(M.shape[1] ** (1/3)))
+	model = GRAE(epochs=epochs, patience=patience, latent_dim=latent_dim)
 
 	# Prepare dataset
 	dataset = BaseDataset(M, y=y, split='none', split_ratio=1, random_state=42, labels=y)

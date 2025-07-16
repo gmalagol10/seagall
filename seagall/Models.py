@@ -381,7 +381,7 @@ class GRAE(AE):
 		else:
 			self.target_embedding = None
 			self.embedder = embedder(random_state=self.random_state,
-								 n_components=self.latent_dim,
+								 latent_dim=self.latent_dim,
 								 **embedder_params)  # To compute target embedding.
 
 	#	if embedder_params is None and self.target_embedding is None:
