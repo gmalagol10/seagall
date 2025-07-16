@@ -19,8 +19,9 @@ from . import Utils as ut
 import logging
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
-from procrustes import procrustes
-from base_dataset import DEVICE
+
+from . import base_dataset
+DEVICE = base_dataset.DEVICE
 
 
 class GAT(torch.nn.Module):
