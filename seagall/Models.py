@@ -6,9 +6,9 @@ import torch.nn as nn
 import numpy as np
 import scipy
 
-import base_model
-import manifold_tools
-import torch_modules
+import .base_model
+import .manifold_tools
+import .torch_modules
 import torch
 
 from torch.autograd import grad as torch_grad
