@@ -329,7 +329,7 @@ def classify_and_explain(adata, target_label: str, hypopt: float = 1.0, n_feat: 
 		adata.var[f"SEAGALL_Importance_for_{label}"] = avg_importance
 
 	# Feature specificity
-	adata.uns[f"SEAGALL_Top_{n_feat}_Specificty"] = mlu.specificty(adata, target_label, n_feat).values.astype(float)
+#	adata.uns[f"SEAGALL_Top_{n_feat}_Specificty"] = mlu.specificty(adata, target_label, n_feat).values.astype(float)
 
 	logger.info(f"{time.strftime('%c')} Pipeline complete")
 
