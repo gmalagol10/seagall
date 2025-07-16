@@ -53,7 +53,7 @@ def HPO_TrainModel_GAT(model, data, model_name, trial, param):
 		train_loss, train_f1 = mlu.GAT_1_step_training(model, train_loader, optimizer, criterion)
 
 		### Validation
-		val_loss, val_f1 = mlu.GAT_validation(model, val_loader, optimizer, criterion)
+		val_loss, val_f1 = mlu.GAT_validation(model, val_loader, criterion)
 		
 		if epoch % 10 == 0:
 			print(f"Epoch {epoch} | Validation loss {val_loss:.3f} | Validation F1 {val_f1:.3f}", flush=True)
