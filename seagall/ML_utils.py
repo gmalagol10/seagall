@@ -20,8 +20,7 @@ import logging
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
-from . import base_dataset
-DEVICE = base_dataset.DEVICE
+from .base_dataset import DEVICE
 
 
 class GAT(torch.nn.Module):

@@ -2,8 +2,8 @@
 from . import ML_utils as mlu
 from . import Utils as ut
 from . import HPO as hpo
-from Models import GRAE
-from base_dataset import DEVICE, BaseDataset
+from .Models import GRAE
+from .base_dataset import DEVICE, BaseDataset
 
 # Standard library imports
 import os

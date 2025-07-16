@@ -5,7 +5,7 @@ from sklearn.decomposition import PCA as SKPCA
 from sklearn.pipeline import make_pipeline
 
 import base_model
-from procrustes import procrustes
+from .procrustes import procrustes
 
 PROC_THRESHOLD = 20000
 PROC_BATCH_SIZE = 5000
