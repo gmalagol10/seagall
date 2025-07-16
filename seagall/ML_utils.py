@@ -418,14 +418,12 @@ def GAT_train_node_classifier(model: torch.nn.Module, data: torch_geometric.data
 
 	train_loader = NeighborLoader(data,
 								  input_nodes=data.train_mask,
-								  num_neighbors=[3, 2],
 								  batch_size=128,
 								  directed=False,
 								  shuffle=True)
 
 	val_loader = NeighborLoader(data,
 								input_nodes=data.val_mask,
-								num_neighbors=[3, 2],
 								batch_size=64,
 								directed=False,
 								shuffle=True)
@@ -444,9 +442,6 @@ def GAT_train_node_classifier(model: torch.nn.Module, data: torch_geometric.data
 			best_epoch = epoch
 			torch.save(model.state_dict(), model_name)
 			logger.info(f"Epoch {epoch:03d}: New best val F1 = {val_f1:.4f}, model saved.")
-		else:
-			logger.info(f"Epoch {epoch:03d}: val F1 did not improve from {best_val_f1:.4f}")
-
 		if epoch - best_epoch >= patience:
 			logger.info(f"Early stopping at epoch {epoch:03d}. Best val F1 = {best_val_f1:.4f}")
 			break
