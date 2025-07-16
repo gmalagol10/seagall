@@ -1,4 +1,8 @@
 """PHATE, AE and GRAE model classes with sklearn inspired interface."""
+import os.path
+import sys
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
+
 import os
 
 import torch
