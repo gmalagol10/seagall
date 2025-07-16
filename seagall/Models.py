@@ -15,7 +15,7 @@ import torch
 from torch.autograd import grad as torch_grad
 
 from .base_dataset import DEVICE
-import base_dataset
+from .  import base_dataset
 
 from pathlib import Path
 # Hyperparameters defaults
