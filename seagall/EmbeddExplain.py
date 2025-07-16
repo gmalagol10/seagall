@@ -287,7 +287,7 @@ def classify_and_explain(adata, target_label: str, hypopt: float = 1.0, n_feat: 
 
 	# Loss setup
 	class_weights = compute_class_weight(class_weight="balanced", classes=np.unique(data.y), y=data.y.numpy())
-	class_weights_tensor = torch.tensor(class_weights, dtype=torch.float, DEVICE=DEVICE)
+	class_weights_tensor = torch.tensor(class_weights, dtype=torch.float, device=DEVICE)
 	criterion = torch.nn.CrossEntropyLoss(weight=class_weights_tensor)
 
 	# Train the model

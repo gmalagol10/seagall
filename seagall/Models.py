@@ -270,7 +270,6 @@ class AE(base_model.BaseModel):
 		# Validation loss
 		if self.val_loader is not None:
 			val_mse = self.eval_MSE(self.val_loader)
-			print(val_mse, self.current_loss_min, val_mse/self.current_loss_min, flush=True)
 			if np.around(val_mse/self.current_loss_min, decimals=2) < 0.975:
 				# If new min, update attributes and checkpoint model
 				self.current_loss_min = val_mse
@@ -299,8 +298,7 @@ class AE(base_model.BaseModel):
 
 		"""
 		self.torch_module.eval()
-		loader = torch.utils.data.DataLoader(x, batch_size=self.batch_size,
-											 shuffle=False)
+		loader = torch.utils.data.DataLoader(x, batch_size=self.batch_size, shuffle=False)
 		z = [self.torch_module.encoder(batch.to(base_model.DEVICE)).cpu().detach().numpy() for batch, _, _ in loader]
 		return np.concatenate(z)
 
