@@ -98,24 +98,22 @@ def geometrical_embedding(
 	# Ensure dense format for GRAE
 	M = sparse.csr_matrix(M, dtype=np.float32).toarray()
 
-	# Initialize model
-	latent_dim = int(np.round(M.shape[1] ** (1/3)))
-	model = GRAE(epochs=epochs, patience=patience, latent_dim=latent_dim, write_path=path)
-	attrs = vars(model)	
-	print(', '.join("%s: %s" % item for item in attrs.items()))
-
 	# Prepare dataset
 	dataset = BaseDataset(M, y=y, split='none', split_ratio=1, random_state=42, labels=y)
+	train_dataset, val_dataset, val_mask = dataset.validation_split(ratio=0.15)
+
+
+	# Initialize model
+	latent_dim = int(np.round(M.shape[1] ** (1/3)))
+	print(epochs, patience, latent_dim, flush=True)
+	model = GRAE(epochs=epochs, patience=patience, latent_dim=latent_dim, write_path=path, data_val=val_dataset)
+	attrs = vars(model)	
+	print("Model's attributes:\n", ', '.join("%s: %s" % item for item in attrs.items()), flush=True)
 
 	model_path = f"{path}/SEAGALL_{model_name}_GRAE.pth"
-	if os.path.isfile(model_path) and not overwrite:
-		logger.info(f"--> {model_path} is a GRAE model, I will use it! <--")
-		model.load(model_path)
-	else:
-		logger.info("Fitting GRAE")
-		train_dataset, val_dataset, val_mask = dataset.validation_split(ratio=0.15)
-		model.fit(train_dataset)
-		model.save(model_path)
+	logger.info("Fitting GRAE")
+	model.fit(train_dataset)
+	model.save(model_path)
 
 	transformed = model.transform(dataset)
 	reconstructed = sparse.csr_matrix(model.inverse_transform(transformed), dtype=np.float32)
