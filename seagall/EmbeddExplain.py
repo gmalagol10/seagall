@@ -111,7 +111,7 @@ def geometrical_embedding(
 		model.load(model_path)
 	else:
 		logger.info("Fitting GRAE")
-		train_dataset, val_dataset = dataset.validation_split(ratio=0.15)
+		train_dataset, val_dataset, val_mask = dataset.validation_split(ratio=0.15)
 		model.fit(train_dataset)
 		model.save(model_path)
 

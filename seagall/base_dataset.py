@@ -176,7 +176,7 @@ class BaseDataset(Dataset):
 
 		return NoSplitBaseDataset(self.data[sample_mask], self.targets[sample_mask], next_latents, next_labels)
 
-	def validation_split(self, ratio=.15 / FIT_DEFAULT, random_state=42):
+	def validation_split(self, ratio=.15, random_state=42):
 		"""Randomly subsample validation split in self.
 
 		Return both train split and validation split as two different BaseDataset objects.
@@ -208,7 +208,7 @@ class BaseDataset(Dataset):
 		x_val = NoSplitBaseDataset(self.data[val_mask], self.targets[val_mask],
 								   next_latents_val, next_labels_val)
 
-		return x_train, x_val, ~val_mask, val_mask
+		return x_train, x_val, val_mask
 
 
 class NoSplitBaseDataset(BaseDataset):
