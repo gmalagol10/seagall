@@ -1,18 +1,15 @@
 """PHATE, AE and GRAE model classes with sklearn inspired interface."""
-import os.path
-import sys
-sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-
 import os
+
 
 import torch
 import torch.nn as nn
 import numpy as np
 import scipy
 
-import base_model
-import manifold_tools
-import torch_modules
+from . import base_model
+from .  import manifold_tools
+from .  import torch_modules
 import torch
 
 from torch.autograd import grad as torch_grad
