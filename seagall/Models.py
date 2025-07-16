@@ -270,7 +270,7 @@ class AE(base_model.BaseModel):
 		# Validation loss
 		if self.val_loader is not None:
 			val_mse = self.eval_MSE(self.val_loader)
-			print(val_mse, self.current_loss_min, decimals, flush=True)
+			print(val_mse, self.current_loss_min, flush=True)
 			if np.around(val_mse/self.current_loss_min, decimals=2) < 0.975:
 				# If new min, update attributes and checkpoint model
 				self.current_loss_min = val_mse

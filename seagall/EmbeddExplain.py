@@ -38,8 +38,8 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(
 def geometrical_embedding(
 	M: np.ndarray, 
 	y: Optional[np.ndarray] = None, 
-	epochs: int = 30,  #TO CHANGE TO 300
-	patience: int = 3, #TO CHANGE TO 30
+	epochs: int = 300,
+	patience: int = 30, 
 	path: str = "SEAGALL", 
 	model_name: str = "mymodel", 
 	overwrite: bool = False) -> tuple:
