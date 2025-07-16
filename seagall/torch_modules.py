@@ -64,7 +64,6 @@ class AutoencoderModule(nn.Module):
 			hidden_dims(List[int]): List of hidden dimensions. Do not include dimensions of the input layer and the
 			bottleneck. See MLP for example.
 			z_dim(int): Bottleneck dimension.
-			noise(float): Variance of the gaussian noise applied to the latent space before reconstruction.
 
 			sigmoid(bool): Apply sigmoid to the output.
 		"""

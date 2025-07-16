@@ -43,7 +43,6 @@ class AE(base_model.BaseModel):
 				 hidden_dims=HIDDEN_DIMS,
 				 conv_dims=[],
 				 conv_fc_dims=[],
-				 noise=0,
 				 train_mask=None,
 				 patience=30,
 				 data_val=None,
@@ -67,7 +66,6 @@ class AE(base_model.BaseModel):
 			conv_fc_dims(List[int]): Number and size of fully connected layers following the conv_dims convolutionnal
 			layer. No need to specify the bottleneck layer. This argument is only used if provided samples
 			are images (i.e. 3D tensors)
-			noise(float): Variance of the gaussian noise injected in the bottleneck before reconstruction.
 			patience(int): Epochs with no validation MSE improvement before early stopping.
 			data_val(BaseDataset): Split to validate MSE on for early stopping.
 			comet_exp(Experiment): Comet experiment to log results.
@@ -87,7 +85,6 @@ class AE(base_model.BaseModel):
 		self.criterion = nn.MSELoss(reduction='mean')
 		self.conv_dims = conv_dims
 		self.conv_fc_dims = conv_fc_dims
-		self.noise = noise
 		self.comet_exp = comet_exp
 		self.data_shape = None  # Shape of input data
 
@@ -119,8 +116,6 @@ class AE(base_model.BaseModel):
 			self.torch_module = torch_modules.AutoencoderModule(input_dim=input_size,
 												  hidden_dims=self.hidden_dims,
 												  z_dim=self.latent_dim,
-												  noise=self.noise,
-												  vae=vae,
 												  sigmoid=sigmoid)
 		else:
 			raise Exception(f'Invalid channel number. X has {len(data_shape)}')
