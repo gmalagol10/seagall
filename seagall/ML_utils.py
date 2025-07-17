@@ -417,12 +417,14 @@ def GAT_train_node_classifier(model: torch.nn.Module, data: torch_geometric.data
 	history = {"TrainLoss": [], "TrainF1": [], "ValLoss": [], "ValF1": []}
 
 	train_loader = NeighborLoader(data,
+								  num_neighbors=[-1],
 								  input_nodes=data.train_mask,
 								  batch_size=128,
 								  directed=False,
 								  shuffle=True)
 
 	val_loader = NeighborLoader(data,
+								num_neighbors=[-1],
 								input_nodes=data.val_mask,
 								batch_size=64,
 								directed=False,
