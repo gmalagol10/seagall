@@ -81,8 +81,9 @@ def process_target_label(adata: sc.AnnData, target_label: str) -> None:
 		Modifies `adata.obs` in place by creating an integer-mapped `target` column.
 		Also adds forward and inverse label mappings in `adata.uns`.
 	"""
-	# Replace NaNs and ensure string type
+	# Replace NaNs, ensure string type, remove dangerous chars
 	adata.obs[target_label] = adata.obs[target_label].astype(str)
+	adata.obs[target_label] = adata.obs[target_label].str.replace("/","_")
 	adata.obs[target_label] = adata.obs[target_label].fillna("unknown").astype(str)
 
 	# Create sorted list of unique labels and mappings
