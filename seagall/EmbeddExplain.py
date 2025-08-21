@@ -101,7 +101,7 @@ def geometrical_embedding(
 	# Prepare dataset
 	dataset = BaseDataset(M, y=y, split='none', split_ratio=1, random_state=42, labels=y)
 	train_dataset, val_dataset, val_mask = dataset.validation_split(ratio=0.15)
-	print("Shape of train and val data sets:", train_dataset.shape, val_dataset.shape, flush=True)
+	print("Shape of train and val data sets:", train_dataset.data.shape, val_dataset.data.shape, flush=True)
 
 	# Initialize model
 	latent_dim = int(np.round(M.shape[1] ** (1/3)))
