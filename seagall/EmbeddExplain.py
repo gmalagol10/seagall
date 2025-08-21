@@ -31,11 +31,6 @@ import scanpy as sc
 torch.manual_seed(np.random.randint(0,10000))
 from .base_dataset import DEVICE
 
-import logging
-logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
-
-
 def geometrical_embedding(
 	M: np.ndarray, 
 	y: Optional[np.ndarray] = None, 
@@ -230,7 +225,6 @@ def classify_and_explain(adata, target_label: str, hypopt: float = 1.0, n_feat: 
 		Modifies `adata` in-place. Saves trained model and feature importances.
 	"""
 
-	logger = logging.getLogger(__name__)
 
 	# Path setup
 	save_path = Path(path)

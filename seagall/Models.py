@@ -427,7 +427,7 @@ class GRAE(AE):
 		if self.target_embedding is not None:
 			logger.info('Geometrical embedding was passed, no need to to fit manifold learning method...')
 		else:
-			logger.info('Fitting manifold learning method...', x.data.shape)
+			logger.info('Fitting manifold learning method...')
 			emb = scipy.stats.zscore(self.embedder.fit_transform(x))  # Normalize embedding
 			emb = (emb - emb.min())/(emb.max()-emb.min())
 			self.target_embedding = torch.from_numpy(emb).float().to(base_model.DEVICE)
