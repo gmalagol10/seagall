@@ -258,7 +258,7 @@ def create_pyg_dataset(adata: sc.AnnData, label: str, size: float = 1.0) -> torc
 	if not (0 < size <= 1):
 		raise ValueError(f"Size must be between 0 (exclusive) and 1 (inclusive), got {size}")
 
-	print(f"Creating pyg dataset based on AnnData object with target label '{label}' and GRAE's graph. Using {int(size*100)}% of the cells", flush=True)
+	logger.info(f"Creating pyg dataset based on AnnData object with target label '{label}' and GRAE's graph. Using {int(size*100)}% of the cells", flush=True)
 
 	if size < 1:
 		cells = []

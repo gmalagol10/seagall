@@ -18,6 +18,11 @@ from .base_dataset import DEVICE
 from .  import base_dataset
 
 from pathlib import Path
+
+import logging
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+
 # Hyperparameters defaults
 BATCH_SIZE = 128
 LR = .0001
@@ -386,16 +391,16 @@ class GRAE(AE):
 			x(BaseDataset): Dataset to fit.
 
 		"""
-		print('Fitting GRAE...', flush=True)
+		logger.info('Fitting GRAE...', flush=True)
 		if self.target_embedding is not None:
-			print('Geometrical embedding was passed, no need to to fit manifold learning method...', flush=True)
+			logger.info('Geometrical embedding was passed, no need to to fit manifold learning method...', flush=True)
 		else:
-			print('Fitting manifold learning method...', x.data.shape, flush=True)
+			logger.info('Fitting manifold learning method...', x.data.shape, flush=True)
 			emb = scipy.stats.zscore(self.embedder.fit_transform(x))  # Normalize embedding
 			emb = (emb - emb.min())/(emb.max()-emb.min())
 			self.target_embedding = torch.from_numpy(emb).float().to(base_model.DEVICE)
 
-		print('Fitting encoder & decoder...', flush=True)
+		logger.info('Fitting encoder & decoder...', flush=True)
 		super().fit(x)
 
 	def compute_loss(self, x, x_hat, z, idx):

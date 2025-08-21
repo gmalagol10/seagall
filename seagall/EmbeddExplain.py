@@ -83,7 +83,6 @@ def geometrical_embedding(
 	reconstruction : sparse matrix, shape (N, F)
 		Reconstructed version of the input matrix obtained by decoding the embedding.
 	"""
-	print("Shape beninning of geometrical_embedding:", M.shape, flush=True)
 	# Ensure output directory exists
 	Path(path).mkdir(parents=True, exist_ok=True)
 
@@ -101,13 +100,12 @@ def geometrical_embedding(
 	# Prepare dataset
 	dataset = BaseDataset(M, y=y, split='none', split_ratio=1, random_state=42, labels=y)
 	train_dataset, val_dataset, val_mask = dataset.validation_split(ratio=0.15)
-	print("Shape of train and val data sets:", train_dataset.data.shape, val_dataset.data.shape, flush=True)
 
 	# Initialize model
 	latent_dim = int(np.round(M.shape[1] ** (1/3)))
 	model = GRAE(epochs=epochs, patience=patience, latent_dim=latent_dim, write_path=path, data_val=val_dataset)
 	attrs = vars(model)	
-	print("Model's attributes:\n", ', '.join("%s: %s" % item for item in attrs.items()), flush=True)
+	logger.info("Model's attributes:\n", ', '.join("%s: %s" % item for item in attrs.items()), flush=True)
 
 	model_path = f"{path}/SEAGALL_{model_name}_GRAE.pth"
 	logger.info("Fitting GRAE")
@@ -177,7 +175,6 @@ def geometrical_graph(
 	representation. Ensure that the embedding function and model are compatible with 
 	GPU acceleration for large datasets.
 	"""
-	print("Shape beninnig of geometrical_graph:", adata.shape, flush=True)
 	# Make sure variable names are unique in adata
 	adata.var_names_make_unique()
 
@@ -189,7 +186,6 @@ def geometrical_graph(
 	M = adata.X.copy() if layer == "X" else adata.layers.get(layer, None)
 	if M is None:
 		raise ValueError(f"Layer '{layer}' not found in the AnnData object.")
-	print("Shape end of geometrical_graph:", adata.shape, flush=True)
 	# Compute the geometrical embedding using the GRAE model
 	Z = geometrical_embedding(M=M, y=adata.obs["target"].values, epochs=epochs, 
 							  patience=patience, path=path, model_name=model_name, overwrite=overwrite)
@@ -319,7 +315,7 @@ def classify_and_explain(adata, target_label: str, hypopt: float = 1.0, n_feat: 
 						  model_config=dict(mode='multiclass_classification', task_level='node', return_type='probs'))
 	explanation = explainer(x=data.x, edge_index=data.edge_index)
 	importance_matrix = explanation.node_mask.cpu().detach().numpy()
-	adata.layers["SEAGALL_Importance"] = sparse.csr_matrix(importance_matrix.astype(np.float32))
+	adata.layers["SEAGALL_Importance"] = importance_matrix.astype(np.float32)
 
 	# Class-specific feature importance
 	for label in labels:

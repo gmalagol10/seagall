@@ -7,6 +7,11 @@ from sklearn.pipeline import make_pipeline
 from .  import base_model
 from .procrustes import procrustes
 
+import logging
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+
+
 PROC_THRESHOLD = 20000
 PROC_BATCH_SIZE = 5000
 PROC_LM = 1000
@@ -104,7 +109,7 @@ class PHATE(phate.PHATE, base_model.BaseModel):
 		if x.shape[0] < self.proc_threshold:
 			result = super().fit_transform(x)
 		else:
-			print('Fitting procrustes...', flush=True)
+			logger.info('Fitting procrustes...', flush=True)
 			result = self.fit_transform_procrustes(x)
 		return result
 
