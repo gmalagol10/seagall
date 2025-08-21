@@ -26,9 +26,9 @@ from torch_geometric.explain import Explainer, GNNExplainer
 # Scanpy for AnnData support
 import scanpy as sc
 
-torch.manual_seed(np.random.randint(0,10000))
 # Device setup
-
+torch.manual_seed(np.random.randint(0,10000))
+from .base_dataset import DEVICE
 
 import logging
 logger = logging.getLogger(__name__)
