@@ -285,6 +285,8 @@ def GAT_1_step_training(model: torch.nn.Module, train_loader: DataLoader,
 	model.train()
 	train_loss = 0.0
 	train_f1 = 0.0
+	gc.collect()
+	torch.cuda.empty_cache()
 
 	for batch in train_loader:
 		optimizer.zero_grad()
