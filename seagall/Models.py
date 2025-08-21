@@ -158,7 +158,7 @@ class AE(base_model.BaseModel):
 
 		for epoch in range(1, self.epochs + 1):
 			if epoch % 10 == 0:
-				print(f'			Epoch {epoch}...', flush=True)
+				print(f'Epoch {epoch}...', flush=True)
 			for batch in self.loader:
 				self.optimizer.zero_grad()
 				self.train_body(batch)
@@ -386,16 +386,16 @@ class GRAE(AE):
 			x(BaseDataset): Dataset to fit.
 
 		"""
-		print('	   Fitting GRAE...', flush=True)
+		print('Fitting GRAE...', flush=True)
 		if self.target_embedding is not None:
-			print('		   Geometrical embedding was passed, no need to to fit manifold learning method...', flush=True)
+			print('Geometrical embedding was passed, no need to to fit manifold learning method...', flush=True)
 		else:
-			print('		   Fitting manifold learning method...', flush=True)
+			print('Fitting manifold learning method...', x.shape, flush=True)
 			emb = scipy.stats.zscore(self.embedder.fit_transform(x))  # Normalize embedding
 			emb = (emb - emb.min())/(emb.max()-emb-min())
 			self.target_embedding = torch.from_numpy(emb).float().to(base_model.DEVICE)
 
-		print('		   Fitting encoder & decoder...', flush=True)
+		print('Fitting encoder & decoder...', flush=True)
 		super().fit(x)
 
 	def compute_loss(self, x, x_hat, z, idx):
