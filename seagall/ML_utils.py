@@ -78,7 +78,7 @@ def _prepare_dataloader(X: np.ndarray | scipy.sparse.csr_matrix, y: np.ndarray, 
 
 
 def split_train_val(X: np.ndarray | scipy.sparse.csr_matrix, y: np.ndarray, train_size: float = 0.85, val_size: float = 0.15,
-					train_batch_size: int = 128, val_batch_size: int = 64) -> tuple[DataLoader, DataLoader]:
+					train_batch_size: int = 64, val_batch_size: int = 32) -> tuple[DataLoader, DataLoader]:
 	"""
 	Split dataset into train and validation sets with balanced weighted sampling.
 
@@ -132,7 +132,7 @@ def split_train_val(X: np.ndarray | scipy.sparse.csr_matrix, y: np.ndarray, trai
 
 
 def split_train_val_test(X: np.ndarray | scipy.sparse.csr_matrix, y: np.ndarray, train_size: float = 0.7, val_size: float = 0.1,
-						test_size: float = 0.2, train_batch_size: int = 128, valtest_batch_size: int = 64) -> tuple[DataLoader, DataLoader, DataLoader]:
+						test_size: float = 0.2, train_batch_size: int = 64, valtest_batch_size: int = 32) -> tuple[DataLoader, DataLoader, DataLoader]:
 	"""
 	Split dataset into train, validation, and test sets with balanced weighted sampling.
 
@@ -387,14 +387,14 @@ def GAT_train_node_classifier(model: torch.nn.Module, data: torch_geometric.data
 	train_loader = NeighborLoader(data,
 								  num_neighbors=[15, 10],
 								  input_nodes=data.train_mask,
-								  batch_size=128,
+								  batch_size=64,
 								  directed=False,
 								  shuffle=True)
 
 	val_loader = NeighborLoader(data,
 								num_neighbors=[15,10],
 								input_nodes=data.val_mask,
-								batch_size=64,
+								batch_size=32,
 								directed=False,
 								shuffle=True)
 
