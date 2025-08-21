@@ -300,8 +300,8 @@ def GAT_1_step_training(
         batch = batch.to(DEVICE)
 
         # Forward pass
-        out = model(batch.x, batch.edge_index)[: batch.batch_size]
-        y_true = batch.y[: batch.batch_size]
+        out = model(batch.x, batch.edge_index)[: batch.batch_size].to(DEVICE)
+        y_true = batch.y[: batch.batch_size].to(DEVICE)
 
         # Compute loss
         loss = criterion(out, y_true)
