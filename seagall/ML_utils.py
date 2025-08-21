@@ -305,6 +305,8 @@ def GAT_1_step_training(model: torch.nn.Module, train_loader: DataLoader,
 		labels = y_true.cpu().numpy()
 		f1 = precision_recall_fscore_support(labels, preds, average="macro")[2]
 		train_f1 += f1
+		gc.collect()
+		torch.cuda.empty_cache()
 
 	return train_loss / len(train_loader), train_f1 / len(train_loader)
 
