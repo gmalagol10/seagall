@@ -5,58 +5,21 @@ import numpy as np
 import pandas as pd
 import scanpy as sc
 import scipy
-import sklearn
 import torch
 import torch_geometric
 from torch_geometric.loader import NeighborLoader
-from torch_geometric.nn import GATv2Conv
 from torch.utils.data import DataLoader, TensorDataset, WeightedRandomSampler
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import precision_recall_fscore_support
 
 from . import Utils as ut
+from . import Models as mod
 
 import logging
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
 from .base_dataset import DEVICE
-
-
-class GAT(torch.nn.Module):
-	"""
-	Graph Attention Network (GAT) implementation based on https://arxiv.org/abs/2105.14491
-
-	Parameters
-	----------
-	n_feats : int
-		Number of input features per node.
-	n_classes : int
-		Number of target classes.
-	dim_h : int, optional
-		Dimension of the hidden layer. Default is 64.
-	heads : int, optional
-		Number of attention heads in the first GAT layer. Default is 8.
-	dropout : float, optional
-		Dropout rate to use in the attention layers. Default is 0.5.
-
-	Methods
-	-------
-	forward(x, edge_index)
-		Forward pass applying two GATv2Conv layers with ReLU activation in between.
-
-	"""
-
-	def __init__(self, n_feats: int, n_classes: int, dim_h: int = 64, heads: int = 8, dropout: float = 0.5):
-		super().__init__()
-		self.gat1 = GATv2Conv(n_feats, dim_h, heads=heads, dropout=dropout)
-		self.gat2 = GATv2Conv(dim_h * heads, n_classes, heads=1, dropout=dropout)
-
-	def forward(self, x: torch.Tensor, edge_index: torch.Tensor) -> torch.Tensor:
-		x = self.gat1(x, edge_index)
-		x = torch.relu(x)
-		x = self.gat2(x, edge_index)
-		return x
 
 
 def _create_weighted_sampler(y: np.ndarray) -> WeightedRandomSampler:
@@ -213,16 +176,16 @@ def split_train_val_test(X: np.ndarray | scipy.sparse.csr_matrix, y: np.ndarray,
 
 	# Split off test set first
 	X_tv, X_test, y_tv, y_test = train_test_split(
-		X, y, train_size=train_size + val_size, random_state=42, stratify=y
-	)
+		X, y, train_size=train_size + val_size, random_state=42, stratify=y)
+
 	test_sampler = _create_weighted_sampler(y_test)
 	test_dataloader = _prepare_dataloader(X_test, y_test, valtest_batch_size, test_sampler)
 
 	# Split train and validation
 	train_fraction = train_size / (train_size + val_size)
 	X_train, X_val, y_train, y_val = train_test_split(
-		X_tv, y_tv, train_size=train_fraction, random_state=42, stratify=y_tv
-	)
+		X_tv, y_tv, train_size=train_fraction, random_state=42, stratify=y_tv)
+
 	train_sampler = _create_weighted_sampler(y_train)
 	val_sampler = _create_weighted_sampler(y_val)
 
@@ -325,9 +288,9 @@ def GAT_1_step_training(model: torch.nn.Module, train_loader: DataLoader,
 	for batch in train_loader:
 		optimizer.zero_grad()
 		batch = batch.to(DEVICE)
-		out = model(batch.x, batch.edge_index)[: batch.batch_size]
+		out = model(batch.x, batch.edge_index)[: batch.batch_size].to(DEVICE)
 
-		y_true = batch.y[: batch.batch_size]
+		y_true = batch.y[: batch.batch_size].to(DEVICE)
 		loss = criterion(out, y_true)
 		loss.backward()
 		optimizer.step()

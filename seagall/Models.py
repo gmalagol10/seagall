@@ -13,6 +13,7 @@ from .  import torch_modules
 import torch
 
 from torch.autograd import grad as torch_grad
+from torch_geometric.nn import GATv2Conv
 
 from .base_dataset import DEVICE
 from .  import base_dataset
@@ -30,6 +31,40 @@ WEIGHT_DECAY = 0
 EPOCHS = 300
 HIDDEN_DIMS = {"hidden_dim" : 800, "hidden_dim_2" : 400, "hidden_dim_1" : 200}  # Default fully-connected dimensions
 
+class GAT(torch.nn.Module):
+	"""
+	Graph Attention Network (GAT) implementation based on https://arxiv.org/abs/2105.14491
+
+	Parameters
+	----------
+	n_feats : int
+		Number of input features per node.
+	n_classes : int
+		Number of target classes.
+	dim_h : int, optional
+		Dimension of the hidden layer. Default is 64.
+	heads : int, optional
+		Number of attention heads in the first GAT layer. Default is 8.
+	dropout : float, optional
+		Dropout rate to use in the attention layers. Default is 0.5.
+
+	Methods
+	-------
+	forward(x, edge_index)
+		Forward pass applying two GATv2Conv layers with ReLU activation in between.
+
+	"""
+
+	def __init__(self, n_feats: int, n_classes: int, dim_h: int = 64, heads: int = 8, dropout: float = 0.5):
+		super().__init__()
+		self.gat1 = GATv2Conv(n_feats, dim_h, heads=heads, dropout=dropout)
+		self.gat2 = GATv2Conv(dim_h * heads, n_classes, heads=1, dropout=dropout)
+
+	def forward(self, x: torch.Tensor, edge_index: torch.Tensor) -> torch.Tensor:
+		x = self.gat1(x, edge_index)
+		x = torch.relu(x)
+		x = self.gat2(x, edge_index)
+		return x
 
 class AE(base_model.BaseModel):
 	"""Vanilla Autoencoder model.

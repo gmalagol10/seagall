@@ -109,7 +109,7 @@ class PHATE(phate.PHATE, base_model.BaseModel):
 		if x.shape[0] < self.proc_threshold:
 			result = super().fit_transform(x)
 		else:
-			logger.info('Fitting procrustes...', flush=True)
+			logger.info('Fitting procrustes...')
 			result = self.fit_transform_procrustes(x)
 		return result
 

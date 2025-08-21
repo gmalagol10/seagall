@@ -8,6 +8,7 @@ import sklearn
 from functools import partial
 
 from . import ML_utils as mlu
+from . import Models as mod
 
 import optuna
 import torch
@@ -84,7 +85,7 @@ def build_GAT(trial, data):
 	dim_h = trial.suggest_int('dim_h', low=32, high=512, step=32)
 	heads = trial.suggest_int('heads', low=1, high=20, step=2)
 	dropout = trial.suggest_float('dropout', low=0.1, high=0.7, step=0.1)
-	model = mlu.GAT(n_feats=data.num_features, n_classes=data.num_classes, dim_h=dim_h, heads=heads, dropout=dropout).to(DEVICE)
+	model = mod.GAT(n_feats=data.num_features, n_classes=data.num_classes, dim_h=dim_h, heads=heads, dropout=dropout).to(DEVICE)
 	
 	return model
 
@@ -135,7 +136,7 @@ def run_HPO_GAT(data, model_name):
 	
 	'''
 
-	model=partial(build_GAT, data = data)
+	model=partial(build_GAT, data=data)
 	obejctive=partial(objective_GAT, data = data, model=model, model_name=model_name)
 	storage_name = "sqlite:///{}.db".format(model_name)
 	study = optuna.create_study(direction="maximize", sampler=optuna.samplers.TPESampler(), pruner=optuna.pruners.MedianPruner(), 

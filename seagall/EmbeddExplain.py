@@ -1,5 +1,6 @@
 # Local module imports (as specified)
 from . import ML_utils as mlu
+from . import Models as mod
 from . import Utils as ut
 from . import HPO as hpo
 from .Models import GRAE
@@ -274,10 +275,10 @@ def classify_and_explain(adata, target_label: str, hypopt: float = 1.0, n_feat: 
 
 	# Model initialization
 	if best_params:
-		model = mlu.GAT(n_feats=data.num_features, n_classes=data.num_classes, dim_h=best_params["dim_h"], heads=best_params["heads"]).to(DEVICE)
+		model = mod.GAT(n_feats=data.num_features, n_classes=data.num_classes, dim_h=best_params["dim_h"], heads=best_params["heads"]).to(DEVICE)
 		optimizer = torch.optim.Adam(model.parameters(), lr=best_params["lr"], weight_decay=best_params["weight_decay"])
 	else:
-		model = mlu.GAT(n_feats=data.num_features, n_classes=data.num_classes).to(DEVICE)
+		model = mod.GAT(n_feats=data.num_features, n_classes=data.num_classes).to(DEVICE)
 		optimizer = torch.optim.Adam(model.parameters(), lr=1e-3, weight_decay=1e-3)
 
 	# Loss setup
