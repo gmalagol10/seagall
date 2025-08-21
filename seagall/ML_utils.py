@@ -281,20 +281,17 @@ def GAT_1_step_training(model: torch.nn.Module, train_loader: DataLoader,
 	average_f1 : float
 		Average macro F1-score over all batches.
 	"""
+	model=model.to(DEVICE)
 	model.train()
 	train_loss = 0.0
 	train_f1 = 0.0
 
 	for batch in train_loader:
-		print(DEVICE, flush=True)
 		optimizer.zero_grad()
 		batch = batch.to(DEVICE)
-		print(DEVICE, flush=True)
 		out = model(batch.x, batch.edge_index)[: batch.batch_size].to(DEVICE)
 
-		print(DEVICE, flush=True)
 		y_true = batch.y[: batch.batch_size].to(DEVICE)
-		print(DEVICE, flush=True)
 		loss = criterion(out.to(DEVICE), y_true.to(DEVICE))
 		loss.backward()
 		optimizer.step()
