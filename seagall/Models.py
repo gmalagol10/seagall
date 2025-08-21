@@ -392,7 +392,7 @@ class GRAE(AE):
 		else:
 			print('Fitting manifold learning method...', x.data.shape, flush=True)
 			emb = scipy.stats.zscore(self.embedder.fit_transform(x))  # Normalize embedding
-			emb = (emb - emb.min())/(emb.max()-emb-min())
+			emb = (emb - emb.min())/(emb.max()-emb.min())
 			self.target_embedding = torch.from_numpy(emb).float().to(base_model.DEVICE)
 
 		print('Fitting encoder & decoder...', flush=True)
