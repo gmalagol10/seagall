@@ -260,55 +260,62 @@ def create_pyg_dataset(adata: sc.AnnData, label: str, size: float = 1.0) -> torc
 	return mydata
 
 
-def GAT_1_step_training(model: torch.nn.Module, train_loader: DataLoader,
-						optimizer: torch.optim.Optimizer, criterion: torch.nn.Module) -> tuple[float, float]:
-	"""
-	Perform one training epoch on GAT model.
+def GAT_1_step_training(
+    model: torch.nn.Module,
+    train_loader: DataLoader,
+    optimizer: torch.optim.Optimizer,
+    criterion: torch.nn.Module,
+) -> tuple[float, float]:
+    """
+    Perform one training epoch on a GAT model.
 
-	Parameters
-	----------
-	model : torch.nn.Module
-		GAT model.
-	train_loader : DataLoader
-		DataLoader for training data.
-	optimizer : torch.optim.Optimizer
-		Optimizer for model parameters.
-	criterion : torch.nn.Module
-		Loss function (e.g., CrossEntropyLoss).
+    Parameters
+    ----------
+    model : torch.nn.Module
+        GAT model.
+    train_loader : DataLoader
+        DataLoader for training data.
+    optimizer : torch.optim.Optimizer
+        Optimizer for model parameters.
+    criterion : torch.nn.Module
+        Loss function (e.g., CrossEntropyLoss).
 
-	Returns
-	-------
-	average_loss : float
-		Average loss over all batches.
-	average_f1 : float
-		Average macro F1-score over all batches.
-	"""
-	model=model.to(DEVICE)
-	model.train()
-	train_loss = 0.0
-	train_f1 = 0.0
-	gc.collect()
-	torch.cuda.empty_cache()
+    Returns
+    -------
+    average_loss : float
+        Average loss over all batches.
+    average_f1 : float
+        Average macro F1-score over all batches.
+    """
+    model = model.to(DEVICE)
+    model.train()
+    train_loss = 0.0
+    train_f1 = 0.0
 
-	for batch in train_loader:
-		optimizer.zero_grad()
-		batch = batch.to(DEVICE)
-		out = model(batch.x, batch.edge_index)[: batch.batch_size].to(DEVICE)
+    # Clear cache once before training loop
+    torch.cuda.empty_cache()
 
-		y_true = batch.y[: batch.batch_size].to(DEVICE)
-		loss = criterion(out.to(DEVICE), y_true.to(DEVICE))
-		loss.backward()
-		optimizer.step()
+    for batch in train_loader:
+        optimizer.zero_grad()
+        batch = batch.to(DEVICE)
 
-		train_loss += loss.item()
-		preds = out.argmax(dim=1).cpu().numpy()
-		labels = y_true.cpu().numpy()
-		f1 = precision_recall_fscore_support(labels, preds, average="macro")[2]
-		train_f1 += f1
-		gc.collect()
-		torch.cuda.empty_cache()
+        # Forward pass
+        out = model(batch.x, batch.edge_index)[: batch.batch_size]
+        y_true = batch.y[: batch.batch_size]
 
-	return train_loss / len(train_loader), train_f1 / len(train_loader)
+        # Compute loss
+        loss = criterion(out, y_true)
+        loss.backward()
+        optimizer.step()
+
+        # Accumulate metrics
+        train_loss += loss.item()
+        preds = out.argmax(dim=1).cpu().numpy()
+        labels = y_true.cpu().numpy()
+        f1 = precision_recall_fscore_support(labels, preds, average="macro")[2]
+        train_f1 += f1
+
+    return train_loss / len(train_loader), train_f1 / len(train_loader)
 
 
 def GAT_validation(model: torch.nn.Module, val_loader: DataLoader, criterion: torch.nn.Module) -> tuple[float, float]:
