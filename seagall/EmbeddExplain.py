@@ -101,7 +101,6 @@ def geometrical_embedding(
 	latent_dim = int(np.round(M.shape[1] ** (1/3)))
 	model = GRAE(epochs=epochs, patience=patience, latent_dim=latent_dim, write_path=path, data_val=val_dataset)
 	attrs = vars(model)	
-	print("Model's attributes:\n", ', '.join("%s: %s" % item for item in attrs.items()), flush=True)
 
 	model_path = f"{path}/SEAGALL_{model_name}_GRAE.pth"
 	logger.info("Fitting GRAE")

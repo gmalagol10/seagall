@@ -423,7 +423,6 @@ class GRAE(AE):
 			x(BaseDataset): Dataset to fit.
 
 		"""
-		logger.info('Fitting GRAE...')
 		if self.target_embedding is not None:
 			logger.info('Geometrical embedding was passed, no need to to fit manifold learning method...')
 		else:
