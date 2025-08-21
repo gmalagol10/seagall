@@ -105,7 +105,6 @@ def geometrical_embedding(
 
 	# Initialize model
 	latent_dim = int(np.round(M.shape[1] ** (1/3)))
-	print(epochs, patience, latent_dim, flush=True)
 	model = GRAE(epochs=epochs, patience=patience, latent_dim=latent_dim, write_path=path, data_val=val_dataset)
 	attrs = vars(model)	
 	print("Model's attributes:\n", ', '.join("%s: %s" % item for item in attrs.items()), flush=True)
