@@ -16,6 +16,7 @@ from torch.autograd import grad as torch_grad
 from torch_geometric.nn import GATv2Conv
 
 from .base_dataset import DEVICE
+print(f"Module {__name__} has been imported","DEVICE -->", DEVICE, flush=True)
 from .  import base_dataset
 
 from pathlib import Path

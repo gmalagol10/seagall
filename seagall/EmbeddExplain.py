@@ -30,6 +30,7 @@ import scanpy as sc
 # Device setup
 torch.manual_seed(np.random.randint(0,10000))
 from .base_dataset import DEVICE
+print(f"Module {__name__} has been imported","DEVICE -->", DEVICE, flush=True)
 
 import logging
 logger = logging.getLogger(__name__)

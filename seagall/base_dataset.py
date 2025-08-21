@@ -9,6 +9,7 @@ from torch.utils.data import Dataset
 from sklearn.model_selection import train_test_split
 
 DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+print(f"Module {__name__} has been imported","DEVICE -->", DEVICE, flush=True)
 FIT_DEFAULT = .85  # Default train/test split ratio
 SEED = 42  # Default seed for splitting
 
