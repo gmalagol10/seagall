@@ -15,15 +15,11 @@ import torch
 from torch.autograd import grad as torch_grad
 from torch_geometric.nn import GATv2Conv
 
-from .base_dataset import DEVICE
-print(f"Module {__name__} has been imported","DEVICE -->", DEVICE, flush=True)
+from .base_dataset import DEVICE, logger
 from .  import base_dataset
 
 from pathlib import Path
 
-import logging
-logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
 # Hyperparameters defaults
 BATCH_SIZE = 128

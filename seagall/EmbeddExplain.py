@@ -4,7 +4,7 @@ from . import Models as mod
 from . import Utils as ut
 from . import HPO as hpo
 from .Models import GRAE
-from .base_dataset import DEVICE, BaseDataset
+from .base_dataset import DEVICE, BaseDataset, logger
 
 # Standard library imports
 import os
@@ -30,7 +30,6 @@ import scanpy as sc
 # Device setup
 torch.manual_seed(np.random.randint(0,10000))
 from .base_dataset import DEVICE
-print(f"Module {__name__} has been imported","DEVICE -->", DEVICE, flush=True)
 
 import logging
 logger = logging.getLogger(__name__)
@@ -107,7 +106,7 @@ def geometrical_embedding(
 	latent_dim = int(np.round(M.shape[1] ** (1/3)))
 	model = GRAE(epochs=epochs, patience=patience, latent_dim=latent_dim, write_path=path, data_val=val_dataset)
 	attrs = vars(model)	
-	logger.info("Model's attributes:\n", ', '.join("%s: %s" % item for item in attrs.items()))
+	print("Model's attributes:\n", ', '.join("%s: %s" % item for item in attrs.items()), flush=True)
 
 	model_path = f"{path}/SEAGALL_{model_name}_GRAE.pth"
 	logger.info("Fitting GRAE")

@@ -7,8 +7,8 @@ from sklearn.metrics import mean_squared_error
 from .  import base_dataset
 
 SEED = 42
-from .base_dataset import DEVICE
-print(f"Module {__name__} has been imported","DEVICE -->", DEVICE, flush=True)
+from .base_dataset import DEVICE, logger
+
 class BaseModel:
 	"""All models should subclass BaseModel."""
 	def __init__(self):

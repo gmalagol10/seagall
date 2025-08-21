@@ -14,8 +14,7 @@ import optuna
 import torch
 import torch_geometric
 
-from .base_dataset import DEVICE
-print(f"Module {__name__} has been imported","DEVICE -->", DEVICE, flush=True)
+from .base_dataset import DEVICE, logger
 # ++++++++++++++++++++++++++++++ GAT
 def HPO_TrainModel_GAT(model, data, model_name, trial, param):
 

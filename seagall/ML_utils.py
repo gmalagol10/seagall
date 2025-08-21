@@ -17,12 +17,7 @@ from sklearn.metrics import precision_recall_fscore_support
 from . import Utils as ut
 from . import Models as mod
 
-import logging
-logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
-
-from .base_dataset import DEVICE
-print(f"Module {__name__} has been imported","DEVICE -->", DEVICE, flush=True)
+from .base_dataset import DEVICE, logger
 
 def _create_weighted_sampler(y: np.ndarray) -> WeightedRandomSampler:
 	"""
