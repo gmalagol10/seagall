@@ -163,7 +163,7 @@ class AE(base_model.BaseModel):
 
 		for epoch in range(1, self.epochs + 1):
 			if epoch % 10 == 0:
-				print(f'Epoch {epoch}...', flush=True)
+				logger.info(f'Epoch {epoch}...')
 			for batch in self.loader:
 				self.optimizer.zero_grad()
 				self.train_body(batch)
@@ -174,7 +174,7 @@ class AE(base_model.BaseModel):
 
 			# Early stopping
 			if self.early_stopping_count == self.patience:
-				print(f"Model has been early stopped at epoch {epoch}", flush=True)
+				logger.info(f"Model has been early stopped at epoch {epoch}")
 				break
 
 		# Load checkpoint if it exists
@@ -391,16 +391,16 @@ class GRAE(AE):
 			x(BaseDataset): Dataset to fit.
 
 		"""
-		logger.info('Fitting GRAE...', flush=True)
+		logger.info('Fitting GRAE...')
 		if self.target_embedding is not None:
-			logger.info('Geometrical embedding was passed, no need to to fit manifold learning method...', flush=True)
+			logger.info('Geometrical embedding was passed, no need to to fit manifold learning method...')
 		else:
-			logger.info('Fitting manifold learning method...', x.data.shape, flush=True)
+			logger.info('Fitting manifold learning method...', x.data.shape)
 			emb = scipy.stats.zscore(self.embedder.fit_transform(x))  # Normalize embedding
 			emb = (emb - emb.min())/(emb.max()-emb.min())
 			self.target_embedding = torch.from_numpy(emb).float().to(base_model.DEVICE)
 
-		logger.info('Fitting encoder & decoder...', flush=True)
+		logger.info('Fitting encoder & decoder...')
 		super().fit(x)
 
 	def compute_loss(self, x, x_hat, z, idx):
