@@ -194,7 +194,7 @@ def geometrical_graph(
 	# Store the results in the original AnnData object
 	adata.obsp[f"GRAE_graph"] = sparse.csr_matrix(ad_ret.obsp["connectivities"], dtype="float32")
 	adata.obsm["GRAE_latent_space"] = Z[0]
-	adata.layers[f"GRAE_decoded_matrix"] = Z[1]
+#	adata.layers[f"GRAE_decoded_matrix"] = Z[1]
 
 
 
