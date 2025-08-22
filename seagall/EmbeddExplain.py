@@ -231,14 +231,7 @@ def classify_and_explain(adata, target_label: str, hypopt: float = 1.0, n_feat: 
 	model_path = save_path / f"SEAGALL_{model_name}_{target_label}"
 
 	# Clean and map target labels
-	adata.obs[target_label] = adata.obs[target_label].astype(str).replace("nan", "unknown")
-	adata.var_names_make_unique()
-	labels = sorted(set(adata.obs[target_label]))
-	label_map = {label: str(idx) for idx, label in enumerate(labels)}
-	inv_label_map = {str(v): k for k, v in label_map.items()}
-	adata.uns["map"] = label_map
-	adata.uns["inv_map"] = inv_label_map
-	adata.obs["target"] = [label_map[label] for label in adata.obs[target_label]]
+	ut.process_target_label(adata, target_label)
 
 	# Dataset creation for HPO
 	if float(hypopt) > 0:
