@@ -236,18 +236,18 @@ def classify_and_explain(adata, target_label: str, hypopt: float = 1.0, n_feat: 
 	# Dataset creation for HPO
 	if float(hypopt) > 0:
 		logger.info(f"{time.strftime('%c')} Checking for HPO file")
-		hpo_path = f"{model_path}_HPO.json"
-		if not os.path.isfile(hpo_path):
+		hpo_path = f"{model_path}_HPO"
+		if not os.path.isfile(f"{hpo_path}.json"):
 			logger.info(f"{time.strftime('%c')} No HPO found. Running with {int(100*hypopt)}% of cells")
 			data = mlu.create_pyg_dataset(adata, target_label, hypopt)
 			data = torch_geometric.transforms.RandomNodeSplit(num_val=0.2, num_test=0)(data)
 			study = hpo.run_HPO_GAT(data, hpo_path)
-			with open(hpo_path, "w") as f:
+			with open(f"{hpo_path}.json", "w") as f:
 				json.dump(study.best_params, f)
 			best_params = study.best_params
 		else:
 			logger.info(f"{time.strftime('%c')} Loading existing HPO results")
-			with open(hpo_path, "r") as f:
+			with open(f"{hpo_path}.json", "r") as f:
 				best_params = json.load(f)
 			for k, v in best_params.items():
 				logger.info(f"Best {k}: {v}")
