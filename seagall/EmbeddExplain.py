@@ -241,7 +241,7 @@ def classify_and_explain(adata, target_label: str, hypopt: float = 1.0, n_feat: 
 	adata.obs["target"] = [label_map[label] for label in adata.obs[target_label]]
 
 	# Dataset creation for HPO
-	if hypopt > 0:
+	if float(hypopt) > 0:
 		logger.info(f"{time.strftime('%c')} Checking for HPO file")
 		hpo_path = f"{model_path}_HPO.json"
 		if not os.path.isfile(hpo_path):
