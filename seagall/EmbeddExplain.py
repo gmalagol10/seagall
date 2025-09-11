@@ -305,7 +305,7 @@ def classify_and_explain(adata, target_label: str, hypopt: float = 1.0, n_feat: 
 	adata.layers["SEAGALL_Importance"] = importance_matrix.astype(np.float32)
 
 	# Class-specific feature importance
-	for label in labels:
+	for label in sorted(set(adata.obs[target_label])):
 		idx = adata.obs[target_label] == label
 		avg_importance = np.array(adata[idx].layers["SEAGALL_Importance"].mean(axis=0)).reshape(-1)
 		adata.var[f"SEAGALL_Importance_for_{label}"] = avg_importance
