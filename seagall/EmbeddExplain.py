@@ -283,7 +283,7 @@ def classify_and_explain(adata, target_label: str, hypopt: float = 1.0, n_feat: 
 	logger.info(f"{time.strftime('%c')} Predicting and annotating")
 	model.eval()
 	predictions = model(data.x, data.edge_index).argmax(dim=1).cpu().detach().numpy()
-	adata.obs["SEAGALL_prediction"] = [inv_label_map[str(p)] for p in predictions]
+	adata.obs["SEAGALL_prediction"] = [adata.uns["inv_map"][str(p)] for p in predictions]
 
 	# Set membership
 	adata.obs["SEAGALL_set"] = "--"
