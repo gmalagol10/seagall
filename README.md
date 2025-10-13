@@ -30,10 +30,12 @@ import distinctipy
 #Upload filtered count matrix from scRNA-seq, scATAC-seq or scChIP-seq experiment
 adata=sc.read_h5ad("MouseBrain_GEX.h5ad")
 
-#Embed the data into a latent space with geometry regularised autoencoder and build the cell-to-cell graph
+#Embed the data into a latent space with geometry regularised autoencoder 
+#and build the cell-to-cell graph
 sgl.ee.geometrical_graph(adata, target_label="CellType", path="SEAGALL")
 
-#Train a GAT classifier to learn the target label and the GNNExplainer to extract meaninfull features
+#Train a GAT classifier to learn the target label 
+#and the GNNExplainer to extract meaninfull features
 sgl.ee.explain(adata, target_label="CellType", path="SEAGALL", hypopt=0.25)
 
 #Show the rank-importance plot for each label
