@@ -32,7 +32,7 @@ adata=sc.read_h5ad("MouseBrain_GEX.h5ad")
 
 sgl.ee.geometrical_graph(adata, target_label="CellType", path="SEAGALL")
 
-sgl.ee.classify_and_explain(adata, target_label="CellType", path="SEAGALL", hypopt=0.25)
+sgl.ee.explain(adata, target_label="CellType", path="SEAGALL", hypopt=0.25)
 
 #Show the rank-importance plot for each label
 colors=distinctipy.get_colors(len(set(adata.obs.CellType)))
