@@ -100,7 +100,6 @@ def geometrical_embedding(
 	# Initialize model
 	latent_dim = int(np.round(M.shape[1] ** (1/3)))
 	model = GRAE(epochs=epochs, patience=patience, latent_dim=latent_dim, write_path=path, data_val=val_dataset)
-	attrs = vars(model)	
 
 	model_path = f"{path}/SEAGALL_{model_name}_GRAE.pth"
 	logger.info("Fitting GRAE")
@@ -199,7 +198,7 @@ def geometrical_graph(
 
 
 
-def explain(adata, target_label: str, hypopt: float = 1.0, n_feat: int = 50, path: str = "SEAGALL", model_name: str = "mymodel"):
+def explain(adata, target_label: str, hypopt: float = 0, n_feat: int = 50, path: str = "SEAGALL", model_name: str = "mymodel"):
 	"""
 	Trains a GAT classifier on an AnnData object, optionally performs HPO, and explains predictions using GNNExplainer.
 
