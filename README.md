@@ -36,6 +36,7 @@ sgl.ee.geometrical_graph(adata, target_label="CellType", path="SEAGALL")
 
 #Train a GAT classifier to learn the target label 
 #and the GNNExplainer to extract meaninfull features
+#automatic splitting the data set in training, validation and test sets
 sgl.ee.explain(adata, target_label="CellType", path="SEAGALL", hypopt=0.25)
 
 #Show the rank-importance plot for each label
