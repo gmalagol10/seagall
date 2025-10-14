@@ -203,7 +203,7 @@ def create_pyg_dataset(adata: sc.AnnData, label: str, size: float = 1.0) -> torc
 	label : str
 		The column name in adata.obs used as target labels.
 	size : float, optional
-		Fraction of cells to use per label. Must be in (0, 1] (default is 1).
+		Fraction of cells to use per label. Must be in ]0, 1] (default is 1).
 
 	Returns
 	-------
@@ -230,87 +230,90 @@ def create_pyg_dataset(adata: sc.AnnData, label: str, size: float = 1.0) -> torc
 		cells = ut.flat_list(cells)
 		ad = adata[cells].copy()
 	else:
-		ad = adata.copy()
+		ad = adata
 
-	# Extract edges from GRAE graph adjacency matrix
-	adj = ad.obsp.get("GRAE_graph")
-	if adj is None:
-		raise KeyError("GRAE_graph adjacency matrix not found in adata.obsp")
+	# Extract nonzero edges directly
+	rows, cols = ad.obsp['GRAE_graph'].nonzero()
+	weights = ad.obsp['GRAE_graph'].data
+	edge_index_tensor = torch.tensor(np.vstack((rows, cols)), dtype=torch.long)
 
-	edges_df = pd.DataFrame(adj.toarray())\
-		.rename_axis("Source")\
-		.reset_index()\
-		.melt("Source", value_name="Weight", var_name="Target")
-	edges_df = edges_df.query("Source != Target and Weight != 0").reset_index(drop=True)
+	# Sparse features
+	X_coo = ad.X.tocoo(copy=False)
+	x_tensor = torch.sparse_coo_tensor(
+		np.vstack((X_coo.row, X_coo.col)),
+		X_coo.data,
+		X_coo.shape,
+		dtype=torch.float32)
 
-	x_tensor = torch.tensor(scipy.sparse.csr_matrix(ad.X, dtype="float32").toarray(), dtype=torch.float32)
-	edge_index_tensor = torch.tensor(edges_df[["Source", "Target"]].astype(int).to_numpy().T, dtype=torch.long)
 	y_tensor = torch.from_numpy(ad.obs["target"].to_numpy().astype(int)).long()
 
 	mydata = torch_geometric.data.Data(x=x_tensor, edge_index=edge_index_tensor, y=y_tensor)
+	del X_coo, x_tensor, y_tensor, ad 
+
 	mydata.num_features = mydata.x.shape[1]
 	mydata.num_classes = len(set(mydata.y.numpy()))
 
-	del ad  # free memory
+	if size < 1:
+		del ad
 	return mydata
 
 
 def GAT_1_step_training(
-    model: torch.nn.Module,
-    train_loader: DataLoader,
-    optimizer: torch.optim.Optimizer,
-    criterion: torch.nn.Module,
+	model: torch.nn.Module,
+	train_loader: DataLoader,
+	optimizer: torch.optim.Optimizer,
+	criterion: torch.nn.Module,
 ) -> tuple[float, float]:
-    """
-    Perform one training epoch on a GAT model.
+	"""
+	Perform one training epoch on a GAT model.
 
-    Parameters
-    ----------
-    model : torch.nn.Module
-        GAT model.
-    train_loader : DataLoader
-        DataLoader for training data.
-    optimizer : torch.optim.Optimizer
-        Optimizer for model parameters.
-    criterion : torch.nn.Module
-        Loss function (e.g., CrossEntropyLoss).
+	Parameters
+	----------
+	model : torch.nn.Module
+		GAT model.
+	train_loader : DataLoader
+		DataLoader for training data.
+	optimizer : torch.optim.Optimizer
+		Optimizer for model parameters.
+	criterion : torch.nn.Module
+		Loss function (e.g., CrossEntropyLoss).
 
-    Returns
-    -------
-    average_loss : float
-        Average loss over all batches.
-    average_f1 : float
-        Average macro F1-score over all batches.
-    """
-    model = model.to(DEVICE)
-    model.train()
-    train_loss = 0.0
-    train_f1 = 0.0
+	Returns
+	-------
+	average_loss : float
+		Average loss over all batches.
+	average_f1 : float
+		Average macro F1-score over all batches.
+	"""
+	model = model.to(DEVICE)
+	model.train()
+	train_loss = 0.0
+	train_f1 = 0.0
 
-    # Clear cache once before training loop
-    torch.cuda.empty_cache()
+	# Clear cache once before training loop
+	torch.cuda.empty_cache()
 
-    for batch in train_loader:
-        optimizer.zero_grad()
-        batch = batch.to(DEVICE)
+	for batch in train_loader:
+		optimizer.zero_grad()
+		batch = batch.to(DEVICE)
 
-        # Forward pass
-        out = model(batch.x, batch.edge_index)[: batch.batch_size].to(DEVICE)
-        y_true = batch.y[: batch.batch_size].to(DEVICE)
+		# Forward pass
+		out = model(batch.x, batch.edge_index)[: batch.batch_size].to(DEVICE)
+		y_true = batch.y[: batch.batch_size].to(DEVICE)
 
-        # Compute loss
-        loss = criterion(out, y_true)
-        loss.backward()
-        optimizer.step()
+		# Compute loss
+		loss = criterion(out, y_true)
+		loss.backward()
+		optimizer.step()
 
-        # Accumulate metrics
-        train_loss += loss.item()
-        preds = out.argmax(dim=1).cpu().numpy()
-        labels = y_true.cpu().numpy()
-        f1 = precision_recall_fscore_support(labels, preds, average="macro")[2]
-        train_f1 += f1
+		# Accumulate metrics
+		train_loss += loss.item()
+		preds = out.argmax(dim=1).cpu().numpy()
+		labels = y_true.cpu().numpy()
+		f1 = precision_recall_fscore_support(labels, preds, average="macro")[2]
+		train_f1 += f1
 
-    return train_loss / len(train_loader), train_f1 / len(train_loader)
+	return train_loss / len(train_loader), train_f1 / len(train_loader)
 
 
 def GAT_validation(model: torch.nn.Module, val_loader: DataLoader, criterion: torch.nn.Module) -> tuple[float, float]:
