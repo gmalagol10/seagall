@@ -64,7 +64,7 @@ def _prepare_dataloader(X: np.ndarray | scipy.sparse.csr_matrix, y: np.ndarray, 
 	DataLoader
 	"""
 	if scipy.sparse.issparse(X):
-		X = X.todense()
+		X = X.toarray()
 	tensor_X = torch.FloatTensor(np.array(X, dtype=np.float32))
 	tensor_y = torch.LongTensor(y)
 	dataset = TensorDataset(tensor_X, tensor_y)
@@ -111,7 +111,7 @@ def split_train_val(X: np.ndarray | scipy.sparse.csr_matrix, y: np.ndarray, trai
 	if len(y) == 0:
 		raise ValueError("Target labels 'y' cannot be empty.")
 
-	X = scipy.sparse.csr_matrix(X, dtype="float32").todense() if scipy.sparse.issparse(X) else np.array(X, dtype="float32")
+	X = scipy.sparse.csr_matrix(X, dtype="float32").toarray() if scipy.sparse.issparse(X) else np.array(X, dtype="float32")
 	y = np.array(y).astype(int)
 
 	X_train, X_val, y_train, y_val = train_test_split(
@@ -168,7 +168,7 @@ def split_train_val_test(X: np.ndarray | scipy.sparse.csr_matrix, y: np.ndarray,
 		raise ValueError("Target labels 'y' cannot be empty.")
 
 	if scipy.sparse.issparse(X):
-		X = X.todense()
+		X = X.toarray()
 	y = np.array(y).astype(int)
 
 	# Split off test set first
@@ -203,7 +203,7 @@ def create_pyg_dataset(adata: sc.AnnData, label: str, size: float = 1.0) -> torc
 	label : str
 		The column name in adata.obs used as target labels.
 	size : float, optional
-		Fraction of cells to use per label. Must be in ]0, 1] (default is 1).
+		Fraction of cells to use per label. Must be in (0, 1] (default is 1).
 
 	Returns
 	-------
@@ -225,7 +225,7 @@ def create_pyg_dataset(adata: sc.AnnData, label: str, size: float = 1.0) -> torc
 		for label_val in set(adata.obs[label].dropna()):
 			sub_ad = adata[adata.obs[label] == label_val].copy()
 			sc.pp.subsample(sub_ad, fraction=size)
-			cells.append(sub_ad.obs.index.tolist())
+			cells.append(sub_ad.obs.index.tolst())
 			del sub_ad
 		cells = ut.flat_list(cells)
 		ad = adata[cells].copy()
@@ -233,87 +233,84 @@ def create_pyg_dataset(adata: sc.AnnData, label: str, size: float = 1.0) -> torc
 		ad = adata
 
 	# Extract nonzero edges directly
-	rows, cols = ad.obsp['GRAE_graph'].nonzero()
-	weights = ad.obsp['GRAE_graph'].data
+	rows, cols = ad.obsp['GRAE_kNN'].nonzero()
+	weights = ad.obsp['GRAE_kNN'].data
 	edge_index_tensor = torch.tensor(np.vstack((rows, cols)), dtype=torch.long)
 
-	# Sparse features
-	X_coo = ad.X.tocoo(copy=False)
-	x_tensor = torch.sparse_coo_tensor(
-		np.vstack((X_coo.row, X_coo.col)),
-		X_coo.data,
-		X_coo.shape,
-		dtype=torch.float32)
+	if scipy.sparse.issparse(ad.X):
+		x_tensor = torch.from_numpy(ad.X.toarray()).float()
+	else:
+		x_tensor = torch.tensor(ad.X, dtype=torch.float32)
 
 	y_tensor = torch.from_numpy(ad.obs["target"].to_numpy().astype(int)).long()
 
 	mydata = torch_geometric.data.Data(x=x_tensor, edge_index=edge_index_tensor, y=y_tensor)
-	del X_coo, x_tensor, y_tensor, ad 
+	del x_tensor, y_tensor , edge_index_tensor
+	if size < 1:
+		del ad
 
 	mydata.num_features = mydata.x.shape[1]
 	mydata.num_classes = len(set(mydata.y.numpy()))
 
-	if size < 1:
-		del ad
 	return mydata
 
 
 def GAT_1_step_training(
-	model: torch.nn.Module,
-	train_loader: DataLoader,
-	optimizer: torch.optim.Optimizer,
-	criterion: torch.nn.Module,
+    model: torch.nn.Module,
+    train_loader: DataLoader,
+    optimizer: torch.optim.Optimizer,
+    criterion: torch.nn.Module,
 ) -> tuple[float, float]:
-	"""
-	Perform one training epoch on a GAT model.
+    """
+    Perform one training epoch on a GAT model.
 
-	Parameters
-	----------
-	model : torch.nn.Module
-		GAT model.
-	train_loader : DataLoader
-		DataLoader for training data.
-	optimizer : torch.optim.Optimizer
-		Optimizer for model parameters.
-	criterion : torch.nn.Module
-		Loss function (e.g., CrossEntropyLoss).
+    Parameters
+    ----------
+    model : torch.nn.Module
+        GAT model.
+    train_loader : DataLoader
+        DataLoader for training data.
+    optimizer : torch.optim.Optimizer
+        Optimizer for model parameters.
+    criterion : torch.nn.Module
+        Loss function (e.g., CrossEntropyLoss).
 
-	Returns
-	-------
-	average_loss : float
-		Average loss over all batches.
-	average_f1 : float
-		Average macro F1-score over all batches.
-	"""
-	model = model.to(DEVICE)
-	model.train()
-	train_loss = 0.0
-	train_f1 = 0.0
+    Returns
+    -------
+    average_loss : float
+        Average loss over all batches.
+    average_f1 : float
+        Average macro F1-score over all batches.
+    """
+    model = model.to(DEVICE)
+    model.train()
+    train_loss = 0.0
+    train_f1 = 0.0
 
-	# Clear cache once before training loop
-	torch.cuda.empty_cache()
+    # Clear cache once before training loop
+    torch.cuda.empty_cache()
 
-	for batch in train_loader:
-		optimizer.zero_grad()
-		batch = batch.to(DEVICE)
+    for batch in train_loader:
+        optimizer.zero_grad()
+        batch = batch.to(DEVICE)
 
-		# Forward pass
-		out = model(batch.x, batch.edge_index)[: batch.batch_size].to(DEVICE)
-		y_true = batch.y[: batch.batch_size].to(DEVICE)
+        # Forward pass
+        out = model(batch.x, batch.edge_index)[: batch.batch_size].to(DEVICE)
+        y_true = batch.y[: batch.batch_size].to(DEVICE)
 
-		# Compute loss
-		loss = criterion(out, y_true)
-		loss.backward()
-		optimizer.step()
+        # Compute loss
+        loss = criterion(out, y_true)
+        loss.backward()
+        optimizer.step()
 
-		# Accumulate metrics
-		train_loss += loss.item()
-		preds = out.argmax(dim=1).cpu().numpy()
-		labels = y_true.cpu().numpy()
-		f1 = precision_recall_fscore_support(labels, preds, average="macro")[2]
-		train_f1 += f1
+        # Accumulate metrics
+        train_loss += loss.item()
+        preds = out.argmax(dim=1).cpu().numpy()
+        labels = y_true.cpu().numpy()
+        f1 = precision_recall_fscore_support(labels, preds, average="macro")[2]
+        train_f1 += f1
 
-	return train_loss / len(train_loader), train_f1 / len(train_loader)
+    return train_loss / len(train_loader), train_f1 / len(train_loader)
 
 
 def GAT_validation(model: torch.nn.Module, val_loader: DataLoader, criterion: torch.nn.Module) -> tuple[float, float]:
