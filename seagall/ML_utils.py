@@ -233,8 +233,8 @@ def create_pyg_dataset(adata: sc.AnnData, label: str, size: float = 1.0) -> torc
 		ad = adata
 
 	# Extract nonzero edges directly
-	rows, cols = ad.obsp['GRAE_kNN'].nonzero()
-	weights = ad.obsp['GRAE_kNN'].data
+	rows, cols = ad.obsp['GRAE_graph'].nonzero()
+	weights = ad.obsp['GRAE_graph'].data
 	edge_index_tensor = torch.tensor(np.vstack((rows, cols)), dtype=torch.long)
 
 	if scipy.sparse.issparse(ad.X):
