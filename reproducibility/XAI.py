@@ -104,7 +104,7 @@ class_weights = sklearn.utils.class_weight.compute_class_weight(class_weight='ba
 criterion = torch.nn.CrossEntropyLoss(weight=torch.tensor(class_weights, dtype=torch.float), reduction="mean")
 
 print(time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()), "Training model", flush=True)					
-model, history = mlu.GNN_train_node_classifier(model, mydata, optimizer_model, criterion, f"{xai_path}_Model.pth", "GAT", epochs=500, patience=50)
+model, history = mlu.GNN_train_node_classifier(model, mydata, optimizer_model, criterion, f"{xai_path}_Model.pth", "GAT", epochs=300, patience=30)
 
 with open(f"{xai_path}_Model_Progress.json", "w") as f:
 	json.dump(history, f)
@@ -127,7 +127,7 @@ print(time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()), f"XAI features e
 n_feat=50
 explainer = torch_geometric.explain.Explainer(
 			model=model,
-			algorithm=torch_geometric.explain.GNNExplainer(epochs=200),
+			algorithm=torch_geometric.explain.GNNExplainer(epochs=300),
 			explanation_type='model',
 			node_mask_type='attributes',
 			edge_mask_type='object',
@@ -191,7 +191,7 @@ for n in range(n_runs):
 	torch.manual_seed(np.random.randint(0,10000))
 	explainer = torch_geometric.explain.Explainer(
 			model=model,
-			algorithm=torch_geometric.explain.GNNExplainer(epochs=250),
+			algorithm=torch_geometric.explain.GNNExplainer(epochs=300),
 			explanation_type='model',
 			node_mask_type='attributes',
 			edge_mask_type='object',
@@ -301,37 +301,3 @@ for ct in set(adata.obs.target):
     df=pd.concat([df, to_append], axis=1)
 
 df.to_csv(f"{xai_path}_NN_XAIFeatures.tsv.gz", sep="\t", compression="gzip")
-
-'''
-if list(set(adata.var.index.str.match("chr")))[0] == True:
-	print(f"BED Metrics for XAI {n_feat}", time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()), flush=True)					 	
-	for col in df_feat:
-		d=df_feat[col]
-		pd.DataFrame([d.iloc[i].split("_") for i in range(len(d))]).dropna().to_csv(f"{xai_path}/{name}_{cm_model}_{col}.tmp", header=None, index=None, sep="\t")
-	   
-	os.system(f"find {xai_path} -type f -name *.tmp  | while read file; do sort -k1,1 -k2,2n -k3,3n -b -o $file $file; done")
-	os.system(f"intervene pairwise -i {xai_path}/*.tmp --scriptonly --compute jaccard --output {xai_path}")
-	os.system(f"intervene pairwise -i {xai_path}/*.tmp --scriptonly --compute frac --output {xai_path}")
-	os.system(f"intervene pairwise -i {xai_path}/*.tmp --scriptonly --compute reldist --output {xai_path}")
-	
-	os.system(f"mv {xai_path}/Intervene_pairwise_frac_matrix.txt {xai_path}/{name}_{cm_model}_Top{str(n_feat)}Features_frac.tsv")
-	os.system(f"mv {xai_path}/Intervene_pairwise_jaccard_matrix.txt {xai_path}/{name}_{cm_model}_Top{str(n_feat)}Features_jaccard.tsv")
-	os.system(f"mv {xai_path}/Intervene_pairwise_reldist_matrix.txt {xai_path}/{name}_{cm_model}_Top{str(n_feat)}Features_reldist.tsv")
-	os.system(rf""" sed -i 's/{name}_{cm_model}_//g' {xai_path}/{name}_{cm_model}_Top{str(n_feat)}features_frac.tsv """)
-	os.system(rf""" sed -i 's/{name}_{cm_model}_//g' {xai_path}/{name}_{cm_model}_Top{str(n_feat)}Features_jaccard.tsv """)	
-	os.system(rf""" sed -i 's/{name}_{cm_model}_//g' {xai_path}/{name}_{cm_model}_Top{str(n_feat)}Features_reldist.tsv """)	
-	os.system(f"gzip --best -f {xai_path}/{name}_{cm_model}_Top{str(n_feat)}Features_*.tsv")
-	os.system(f"rm -f {xai_path}/*.tmp")		 
-	
-if list(set(adata.var.index.str.match("chr")))[0] == False:  
-	print(f"GTF Metrics for XAI {n_feat}", time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()), flush=True)					 
-	jc=pd.DataFrame(index=df_feat.columns, columns=df_feat.columns)
-	for column in jc.columns:
-		for col in jc.columns:
-			if len(df_feat[column].dropna())==0 or len(df_feat[col].dropna())==0:
-				print("Problem with either {column} or {col}")
-			else:	
-				jc.at[column, col]=len(intersection([df_feat[column].dropna(), df_feat[col].dropna()]))/len(flat_list([df_feat[column].dropna(), df_feat[col].dropna()]))
-	jc.to_csv(f"{xai_path}/{name}_{cm_model}_Top{str(n_feat)}Features_jaccard.tsv.gz", sep="\t", compression="gzip")	   		
-
-'''

@@ -144,7 +144,7 @@ def GNN_validation(model, val_loader, optimizer, criterion, GNN):
 	
 	return val_loss/len(val_loader), val_f1w/len(val_loader)
 	
-def GNN_train_node_classifier(model, data, optimizer, criterion, model_name, GNN, epochs=250, patience=20):
+def GNN_train_node_classifier(model, data, optimizer, criterion, model_name, GNN, epochs=300, patience=30):
 	if not (GNN == "GCN" or GNN == "GAT"):
 		raise ValueError(f'Parameter GNN cannot be {GNN}')
 
@@ -159,7 +159,7 @@ def GNN_train_node_classifier(model, data, optimizer, criterion, model_name, GNN
 	train_loader = torch_geometric.loader.NeighborLoader(data, input_nodes=data.train_mask, num_neighbors=[3,2], batch_size=128, directed=False, shuffle=True)
 	val_loader = torch_geometric.loader.NeighborLoader(data, input_nodes=data.val_mask, num_neighbors=[3,2], batch_size=64, directed=False, shuffle=True)
 	
-	for epoch in range(1, epochs + 1):
+	for epoch in range(0, epochs):
 		### Training
 		train_loss, train_f1w = GNN_1_step_training(model, train_loader, optimizer, criterion, GNN)
 		history["TrainLoss"].append(np.around(train_loss, decimals=5))
@@ -219,7 +219,7 @@ def NN_validation(model, val_loader, optimizer, criterion):
 	
 	return val_loss/len(val_loader), val_f1w/len(val_loader)
 
-def NN_train_classifier(model, adata, optimizer, criterion, model_name, epochs=250, patience=50):
+def NN_train_classifier(model, adata, optimizer, criterion, model_name, epochs=300, patience=30):
 	best_val_f1w = -1
 	best_epoch = -1
 	history={}
@@ -230,7 +230,7 @@ def NN_train_classifier(model, adata, optimizer, criterion, model_name, epochs=2
 
 	train_loader, val_loader, test_laoder=split_train_val_test(adata.X, np.array(adata.obs.target))
 	
-	for epoch in range(1, epochs + 1):
+	for epoch in range(0 epochs):
 		### Training
 		train_loss, train_f1w = NN_1_step_training(model, train_loader, optimizer, criterion)
 		history["TrainLoss"].append(np.around(train_loss, decimals=5))
@@ -258,7 +258,7 @@ def NN_train_classifier(model, adata, optimizer, criterion, model_name, epochs=2
 
 
 ####### Apply AE
-def PeakVI(M, patience=20, epochs=300, model_name="PippoPeakVI"):
+def PeakVI(M, patience=30, epochs=300, model_name="PippoPeakVI"):
 	to_use=sc.AnnData(M)
 	scvi.model.PEAKVI.setup_anndata(adata=to_use)
 	model = scvi.model.PEAKVI(adata=to_use)
@@ -266,7 +266,7 @@ def PeakVI(M, patience=20, epochs=300, model_name="PippoPeakVI"):
 	model.save(model_name, overwrite=True)
 	return model.get_latent_representation(), scipy.sparse.csr_matrix(model.get_accessibility_estimates(), dtype="float32")
 	
-def scVI(M, patience=20, epochs=300, model_name="PipposcVI"):
+def scVI(M, patience=30, epochs=300, model_name="PipposcVI"):
 	to_use=sc.AnnData(M)
 	scvi.model.LinearSCVI.setup_anndata(to_use)
 	model = scvi.model.LinearSCVI(to_use, n_hidden=int(to_use.shape[1]**(1/2)), n_latent=int(to_use.shape[1]**(1/3)))
@@ -277,13 +277,18 @@ def scVI(M, patience=20, epochs=300, model_name="PipposcVI"):
 def GR_AE(M, y=[], epochs=300, model_name="PippoGRAE"):
 	y=np.array(y).astype(int)
 	M=scipy.sparse.csr_matrix(M, dtype="float32").todense()
-	m = GRAE(epochs=300, patience=20, n_components=int(M.shape[1]**(1/3)))
-	temp=grae.data.base_dataset.BaseDataset(M, y, "none", 0.85, 42, y)
-	m.fit(temp)
-	m.save(f"{model_name}.pth")
-	return m.transform(temp), scipy.sparse.csr_matrix(m.inverse_transform(m.transform(temp)), dtype="float32")
 
-def TopoAE(M, y=[], params=None, model_name="PippoTopoAE"):
+	dataset = BaseDataset(M, y=y, split='none', split_ratio=1, random_state=42, labels=y)
+	train_dataset, val_dataset, val_mask = dataset.validation_split(ratio=0.15)
+
+	model = GRAE(epochs=epochs, patience=30, latent_dim=int(np.round(M.shape[1] ** (1/3))), write_path=model_name, data_val=val_dataset)
+
+	model.fit(train_dataset)
+
+	return model.transform(dataset), scipy.sparse.csr_matrix(model.inverse_transform(model.transform(dataset)), dtype="float32")
+
+
+def TAE(M, y=[], params=None, model_name="PippoTAE"):
 
 	if params is None:
 		params={}
@@ -295,9 +300,9 @@ def TopoAE(M, y=[], params=None, model_name="PippoTopoAE"):
 		params["lr"]=2e-04
 		params["weight_decay"]=4e-03
 		params["epochs"]=300
-		params["patience"]=20
+		params["patience"]=30
 
-	print("TopoAE params:", params, flush=True)
+	print("TAE params:", params, flush=True)
 
 	device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 	
@@ -333,7 +338,7 @@ def TopoAE(M, y=[], params=None, model_name="PippoTopoAE"):
 		if np.around(val_loss/best_val_loss, decimals=2) < 0.95:
 			best_val_loss = val_loss
 			best_epoch = epoch
-			print(f"TopoAE checkpoint! Best epoch {best_epoch} | Best loss {best_val_loss:.7f}", flush=True)
+			print(f"TAE checkpoint! Best epoch {best_epoch} | Best loss {best_val_loss:.7f}", flush=True)
 			torch.save(Topo.state_dict(), f"{model_name}.pth")
 		
 		elif epoch - best_epoch > params["patience"]:
@@ -344,16 +349,86 @@ def TopoAE(M, y=[], params=None, model_name="PippoTopoAE"):
 				X=torch.tensor(scipy.sparse.csr_matrix(X, dtype="float32").todense()).to(device)
 				val_losses.append(Topo(X).item())
 			best_val_loss=np.mean(val_losses)
-			print(f"TopoAE early stopped at epoch {epoch} with best epoch {best_epoch} | Best loss: {best_val_loss:.7f}", flush=True)
+			print(f"TAE early stopped at epoch {epoch} with best epoch {best_epoch} | Best loss: {best_val_loss:.7f}", flush=True)
 			dataset = torch.tensor(scipy.sparse.csr_matrix(M, dtype="float32").todense())
 			return Topo.encode(dataset).detach().numpy(), scipy.sparse.csr_matrix(Topo.decode(Topo.encode(dataset)).detach().numpy(),  dtype="float32")
 
-	print(f"TopoAE stopped at epoch {epoch} with best epoch {best_epoch}", flush=True)
+	print(f"TAE stopped at epoch {epoch} with best epoch {best_epoch}", flush=True)
 	Topo.load_state_dict(torch.load(f"{model_name}.pth"))
 	Topo.eval()
 	dataset = torch.tensor(scipy.sparse.csr_matrix(M, dtype="float32").todense())
 	return Topo.encode(dataset).detach().numpy(), scipy.sparse.csr_matrix(Topo.decode(Topo.encode(dataset)).detach().numpy(),  dtype="float32")
 	
+
+def AE(M, y=[], params=None, model_name="PippoAE"):
+
+	device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+	if params is None:
+		params={}
+		params["hidden_dim"]=int(M.shape[1]**(1/2))
+		params["latent_dim"]=int(M.shape[1]**(1/3))
+		params["dp"]=0.4
+		params["lr"]=7e-04
+		params["weight_decay"]=2e-03
+		params["epochs"]=300
+		params["patience"]=30
+
+	print("AE params:", params, flush=True)
+	
+	if len(y) == 0:
+		y=np.ones(shape=(M.shape[0],))
+	y=np.array(y).astype(int)
+	train_dataloader, val_dataloader = split_train_val(M, y)
+					
+	ae = mod.BaseAE(input_dim=M.shape[1], hidden_dim=params["hidden_dim"], latent_dim=params["latent_dim"], dp=params["dp"])
+
+	optimizer = torch.optim.Adam(ae.parameters(), lr=params["lr"], weight_decay=params["weight_decay"])
+	
+	best_val_loss = 10e10
+	best_epoch = -1
+	loss_fn=torch.nn.MSELoss()
+
+	torch.save(ae.state_dict(), f"{model_name}.pth")
+
+	for epoch in range(0, params["epochs"]):
+		val_losses=[]
+		for X,y in train_dataloader:
+			X_hat = ae(X)
+			reconstruction_loss = loss_fn(X, X_hat)
+			optimizer.zero_grad()
+			reconstruction_loss.backward()
+			optimizer.step()
+
+		for X, y in val_dataloader:
+			X_hat = ae(X)
+			reconstruction_loss = loss_fn(X, X_hat)
+			val_losses.append(reconstruction_loss.item())
+		val_loss=np.mean(val_losses)
+
+		if np.around(val_loss/best_val_loss, decimals=2) < 0.95:
+			best_val_loss = val_loss
+			best_epoch = epoch
+			print(f"AE checkpoint! Best epoch {best_epoch} | Best loss {best_val_loss:.7f}", flush=True)
+			torch.save(ae.state_dict(), f"{model_name}.pth")
+		elif epoch - best_epoch > params["patience"]:
+			ae.load_state_dict(torch.load(f"{model_name}.pth"))
+			ae.eval()
+			val_losses=[]
+			for X, y in val_dataloader:
+				X_hat = ae(X)
+				reconstruction_loss = loss_fn(X, X_hat)
+				val_losses.append(reconstruction_loss.item())
+			best_val_loss=np.mean(val_losses)
+			print(f"AE early stopped at epoch {epoch} with best epoch {best_epoch} | Best loss: {best_val_loss:.7f}", flush=True)
+			dataset = torch.tensor(scipy.sparse.csr_matrix(M, dtype="float32").todense())
+			return ae.encode(dataset).detach().numpy(), scipy.sparse.csr_matrix(ae.decode(ae.encode(dataset)).detach().numpy(),  dtype="float32") 
+
+	print(f"AE stopped at epoch {epoch} with best epoch {best_epoch}", flush=True)
+	ae.load_state_dict(torch.load(f"{model_name}.pth"))
+	ae.eval()
+	dataset = torch.tensor(scipy.sparse.csr_matrix(M, dtype="float32").todense())
+	return ae.encode(dataset).detach().numpy(), scipy.sparse.csr_matrix(ve.decode(ae.encode(dataset)).detach().numpy(),  dtype="float32") 
+
 
 def VAE(M, y=[], params=None, model_name="PippoVAE"):
 
@@ -361,12 +436,12 @@ def VAE(M, y=[], params=None, model_name="PippoVAE"):
 		params={}
 		params["hidden_dim"]=int(M.shape[1]**(1/2))
 		params["latent_dim"]=int(M.shape[1]**(1/3))
-		params["kl_weigth"]=0.4
 		params["dp"]=0.3
-		params["lr"]=4e-03
-		params["weight_decay"]=7e-03
+		params["lr"]=1e-02
+		params["weight_decay"]=1e-02
 		params["epochs"]=300
-		params["patience"]=20
+		params["patience"]=30
+
 	print("VAE params:", params, flush=True)
 	
 	if len(y) == 0:
@@ -383,16 +458,25 @@ def VAE(M, y=[], params=None, model_name="PippoVAE"):
 	best_val_loss = 10e10
 	best_epoch = -1
 	loss_fn=torch.nn.MSELoss()
-	kl_weigth=params["kl_weigth"]
+
+	annealer = mod.KLAnnealer(
+        mode=params.get("anneal_mode","linear"),
+        n_steps=params.get("anneal_steps",10000),
+        beta_start=0.0,
+        beta_max=0.5)
+	global_step = 0
+
 	torch.save(vae.state_dict(), f"{model_name}.pth")
 
 	for epoch in range(0, params["epochs"]):
 		val_losses=[]
 		for X,y in train_dataloader:
+			global_step += 1
+			beta = annealer.step()
 			X_hat, mu, log_var = vae(X)
 			reconstruction_loss = loss_fn(X, X_hat)
 			kl_loss = torch.mean(-0.5 * torch.sum(1 + log_var - mu ** 2 - torch.exp(log_var), dim = 1), dim = 0)
-			train_loss = reconstruction_loss + kl_weigth * kl_loss
+			train_loss = reconstruction_loss + beta * kl_loss
 			optimizer.zero_grad()
 			train_loss.backward()
 			optimizer.step()
@@ -401,7 +485,8 @@ def VAE(M, y=[], params=None, model_name="PippoVAE"):
 			X_hat, mu, log_var = vae(X)
 			reconstruction_loss = loss_fn(X, X_hat)
 			kl_loss = torch.mean(-0.5 * torch.sum(1 + log_var - mu ** 2 - torch.exp(log_var), dim = 1), dim = 0)
-			tot_loss = reconstruction_loss + kl_weigth * kl_loss
+			beta = annealer.beta(global_step)   # use current beta
+			tot_loss = reconstruction_loss + beta * kl_loss
 			val_losses.append(tot_loss.item())
 		val_loss=np.mean(val_losses)
 
@@ -418,7 +503,8 @@ def VAE(M, y=[], params=None, model_name="PippoVAE"):
 				X_hat, mu, log_var = vae(X)
 				reconstruction_loss = loss_fn(X, X_hat)
 				kl_loss = torch.mean(-0.5 * torch.sum(1 + log_var - mu ** 2 - torch.exp(log_var), dim = 1), dim = 0)
-				tot_loss = reconstruction_loss + kl_weigth * kl_loss
+				beta = annealer.beta(global_step)   # use current beta
+				tot_loss = reconstruction_loss + beta * kl_loss
 				val_losses.append(tot_loss.item())
 			best_val_loss=np.mean(val_losses)
 			print(f"VAE early stopped at epoch {epoch} with best epoch {best_epoch} | Best loss: {best_val_loss:.7f}", flush=True)
@@ -430,6 +516,8 @@ def VAE(M, y=[], params=None, model_name="PippoVAE"):
 	vae.eval()
 	dataset = torch.tensor(scipy.sparse.csr_matrix(M, dtype="float32").todense())
 	return vae.encode(dataset)[0].detach().numpy(), scipy.sparse.csr_matrix(vae.decode(vae.encode(dataset)[0]).detach().numpy(),  dtype="float32") 
+
+
 
 def embbedding_and_graph(adata, y=None, representation=None, layer="X", model_name="Pappo", params=None):
 	
@@ -445,6 +533,13 @@ def embbedding_and_graph(adata, y=None, representation=None, layer="X", model_na
 		sc.pp.neighbors(ad_ret, use_rep="X", method="umap")
 		return scipy.sparse.csr_matrix(ad_ret.obsp["connectivities"], dtype="float32"), scipy.sparse.csr_matrix(ad_ret.X, dtype="float32")
 	
+	elif representation == "AE":
+		Z = AE(M, y=y, model_name=model_name, params=params)[0]
+		ad_ret=sc.AnnData(scipy.sparse.csr_matrix(Z, dtype="float32"))
+		del Z
+		sc.pp.neighbors(ad_ret, use_rep="X", method="umap")
+		return scipy.sparse.csr_matrix(ad_ret.obsp["connectivities"], dtype="float32"), scipy.sparse.csr_matrix(ad_ret.X, dtype="float32")
+
 	elif representation == "VAE":
 		Z = VAE(M, y=y, model_name=model_name, params=params)[0]
 		ad_ret=sc.AnnData(scipy.sparse.csr_matrix(Z, dtype="float32"))
@@ -453,8 +548,8 @@ def embbedding_and_graph(adata, y=None, representation=None, layer="X", model_na
 		return scipy.sparse.csr_matrix(ad_ret.obsp["connectivities"], dtype="float32"), scipy.sparse.csr_matrix(ad_ret.X, dtype="float32")
 
 
-	elif representation == "TopoAE":
-		Z = TopoAE(M, y=y, model_name=model_name, params=params)[0]
+	elif representation == "TAE":
+		Z = TAE(M, y=y, model_name=model_name, params=params)[0]
 		ad_ret=sc.AnnData(scipy.sparse.csr_matrix(Z, dtype="float32"))
 		sc.pp.neighbors(ad_ret, use_rep="X", method="umap")
 		return scipy.sparse.csr_matrix(ad_ret.obsp["connectivities"], dtype="float32"), scipy.sparse.csr_matrix(ad_ret.X, dtype="float32")
@@ -483,8 +578,11 @@ def ApplyAE(M, representation, y=None, model_name="Pippo"):
 	if representation == "GRAE":
 		return GR_AE(M, y=y, model_name=model_name)
 
-	elif representation == "TopoAE":
-		return TopoAE(M, y=y, model_name=model_name)
+	if representation == "AE":
+		return AE(M, y=y, model_name=model_name)
+
+	elif representation == "TAE":
+		return TAE(M, y=y, model_name=model_name)
 
 	elif representation == "VAE":
 		return VAE(M, y=y, model_name=model_name)

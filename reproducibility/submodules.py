@@ -7,6 +7,9 @@ import torch.nn.functional as F
 from topology import AutoencoderModel
 
 
+# Hush the linter: Warning W0221 corresponds to a mismatch between parent class
+# method signature and the child class
+# pylint: disable=W0221
 class BaseAE(torch.nn.Module):
 	def __init__(self, input_dim, hidden_dim=256, latent_dim=32, act_fn=torch.nn.LeakyReLU, act_fn_out=None, dp=0.5):
 		"""Create new autoencoder with pre-defined latent dimension."""

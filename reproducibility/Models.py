@@ -56,8 +56,53 @@ class NN(torch.nn.Module):
 		x = self.l2(x)
 		
 		return x
-				
+		
+class BaseAE(torch.nn.Module):
+	def __init__(self, input_dim, hidden_dim, latent_dim, act_fn=torch.nn.LeakyReLU, act_fn_out=None, dp=0.3):
+		"""Create new autoencoder with pre-defined latent dimension."""
+		super().__init__()
+
+		self.input_dim = input_dim
+		self.hidden_dim = hidden_dim
+		self.latent_dim = latent_dim
+																																																																															
+		self.act_fn = act_fn
+		self.act_fn_out = act_fn_out
+
+		self.encoder = torch.nn.Sequential(torch.nn.Dropout(dp), torch.nn.Linear(self.input_dim, self.hidden_dim), self.act_fn(), 
+										   torch.nn.Dropout(dp), torch.nn.Linear(self.hidden_dim, self.latent_dim))
+
+		if act_fn_out:
+				self.decoder = torch.nn.Sequential(torch.nn.Dropout(dp), torch.nn.Linear(self.latent_dim, self.hidden_dim), self.act_fn(),
+												   torch.nn.Dropout(dp), torch.nn.Linear(self.hidden_dim, self.input_dim), self.act_fn_out())
+		else:
+				self.decoder = torch.nn.Sequential(torch.nn.Dropout(dp), torch.nn.Linear(self.latent_dim, self.hidden_dim), self.act_fn(), 
+												   torch.nn.Dropout(dp), torch.nn.Linear(self.hidden_dim, self.input_dim))
+
+		self.loss_fn = torch.nn.MSELoss()
+
+	def encode(self, x):
+		"""Embed data in latent space."""
+		return self.encoder(x)
+
+	def decode(self, z):
+		"""Decode data from latent space."""
+		return self.decoder(z)
+
+	def forward(self, x):
+		"""Embeds and reconstructs data, returning a loss."""
+		z = self.encode(x)
+		x_hat = self.decode(z)
+
+		# The loss can of course be changed. If this is your first time
+		# working with autoencoders, a good exercise would be to 'grok'
+		# the meaning of different losses.
+		reconstruction_error = self.loss_fn(x, x_hat)
+		return reconstruction_error		
+		
 class TopologicallyRegularizedAutoencoder(AutoencoderModel):
+	"""Topological Autoencoder."""
+
 	def __init__(self, lam=1., p=2, autoencoder_model='BaseAE', ae_kwargs=None, toposig_kwargs=None):
 		"""
 			Args:
@@ -112,6 +157,7 @@ class TopologicallyRegularizedAutoencoder(AutoencoderModel):
 	
 class VAutoencoder(torch.nn.Module):
 	def __init__(self, autoencoder_model='BaseAE', ae_kwargs=None):
+		"""Create new autoencoder with pre-defined latent dimension."""
 		super().__init__()
 
 		ae_kwargs = ae_kwargs if ae_kwargs else {}
@@ -142,4 +188,44 @@ class VAutoencoder(torch.nn.Module):
 		z, mu, log_var = self.encode(x)
 		x_hat = self.autoencoder.decode(z)
 		return [x_hat, mu, log_var]
+
+class KLAnnealer:
+    def __init__(self, mode="linear", n_steps=10000, beta_start=0.0, beta_max=1.0, cycles=4, ratio=0.5):
+        self.mode = mode
+        self.n_steps = n_steps
+        self.beta_start = beta_start
+        self.beta_max = beta_max
+        self.cycles = cycles
+        self.ratio = ratio
+        self.step_count = 0
+
+    def step(self):
+        self.step_count += 1
+        return self.beta(self.step_count)
+
+    def beta(self, t):
+        if self.mode == "constant":
+            return self.beta_max
+
+        if self.mode == "linear":
+            frac = min(t / self.n_steps, 1.0)
+            return self.beta_start + (self.beta_max - self.beta_start) * frac
+
+        if self.mode == "sigmoid":
+            midpoint = self.n_steps / 2
+            k = 8 / self.n_steps
+            s = 1 / (1 + np.exp(-k * (t - midpoint)))
+            return self.beta_start + (self.beta_max - self.beta_start) * s
+
+        if self.mode == "cyclical":
+            T = self.n_steps
+            cycle_len = int(T / self.ratio)
+            cycle_id = (t - 1) // cycle_len
+            pos = (t - 1) % cycle_len + 1
+            if pos <= T:
+                frac = pos / T
+                return self.beta_start + (self.beta_max - self.beta_start) * frac
+            else:
+                return self.beta_max
+
 

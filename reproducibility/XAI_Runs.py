@@ -71,13 +71,13 @@ print(time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()), f"Run XAI experi
 dfs=[]
 n_runs=50
 columns=sorted(list(set(adata.obs[label])))
-'''
+
 for n in range(n_runs):
 	print(time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()), f"	--> Run {n}/{n_runs}", flush=True)
 	torch.manual_seed(np.random.randint(0,10000))
 	explainer = torch_geometric.explain.Explainer(
 			model=model,
-			algorithm=torch_geometric.explain.GNNExplainer(epochs=150),
+			algorithm=torch_geometric.explain.GNNExplainer(epochs=300),
 			explanation_type='model',
 			node_mask_type='attributes',
 			edge_mask_type='object',
@@ -101,7 +101,7 @@ for n in range(n_runs):
 	df_feat.to_csv(f"{path}/Runs/Run{n}/{name}_HPO_XAIFeatures.tsv.gz", sep="\t", compression="gzip")
 	df_imp.to_csv(f"{path}/Runs/Run{n}/{name}_HPO_XAIFeaturesImportance.tsv.gz", sep="\t", compression="gzip")
 	dfs.append(df_feat)
-'''
+
 dfs=[pd.read_csv(f"{path}/Runs/Run{n}/{name}_HPO_XAIFeatures.tsv.gz", sep="\t", index_col=0) for n in range(n_runs)]
 
 expls={}

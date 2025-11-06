@@ -7,7 +7,6 @@ import networkx as nx
 
 import time
 import scipy
-#import scvi
 
 import sklearn
 
@@ -25,7 +24,7 @@ import torch_geometric
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # ++++++++++++++++++++++++++++++ GNN
-def HPO_TrainModel_GNN(model, data, model_name, trial, param, GNN, epochs=250):
+def HPO_TrainModel_GNN(model, data, model_name, trial, param, GNN, epochs=300):
 	if not (GNN == "GCN" or GNN == "GAT"):
 		raise ValueError(f'Parameter GNN cannot be {GNN}')
 		
@@ -33,7 +32,7 @@ def HPO_TrainModel_GNN(model, data, model_name, trial, param, GNN, epochs=250):
 	criterion = torch.nn.CrossEntropyLoss(weight=torch.tensor(class_weights, dtype=torch.float), reduction="mean")
 	optimizer = torch.optim.Adam(model.parameters(), lr=param['lr'], weight_decay=param['weight_decay'])
 	
-	patience = 20
+	patience = 30
 	best_val_f1w = -1
 	best_epoch = -1
 
@@ -93,7 +92,7 @@ def run_HPO_GCN(data, model_name):
 	storage_name = "sqlite:///{}.db".format(model_name)
 	study = optuna.create_study(direction="maximize", sampler=optuna.samplers.TPESampler(), pruner=optuna.pruners.MedianPruner(), 
 								study_name=model_name, storage=storage_name, load_if_exists=True)
-	study.optimize(obejctive, n_trials=20, n_jobs=1, gc_after_trial=True)
+	study.optimize(obejctive, n_trials=25, n_jobs=1, gc_after_trial=True)
 	
 	return study
 
@@ -116,16 +115,16 @@ def run_HPO_GAT(data, model_name):
 	obejctive=partial(objective_GAT, data = data, model=model, model_name=model_name)
 	storage_name = "sqlite:///{}.db".format(model_name)
 	study = optuna.create_study(direction="maximize", sampler=optuna.samplers.TPESampler(), pruner=optuna.pruners.MedianPruner(), 
-							study_name=model_name, storage=storage_name, load_if_exists=True)
-	study.optimize(obejctive, n_trials=20, n_jobs=1, gc_after_trial=True)
+							study_name=model_name, storage=storage_name, load_if_exists=False)
+	study.optimize(obejctive, n_trials=25, n_jobs=1, gc_after_trial=True)
 	
 	return study
 
 
 
 
-# ++++++++++++++++++++++++++++++ TopoAE
-def HPO_train_TopoAE(model, M, model_name, trial, param, y=[], epochs=200):
+# ++++++++++++++++++++++++++++++ TAE
+def HPO_train_TAE(model, M, model_name, trial, param, y=[], epochs=300):
 	if len(y) == 0:
 		y=np.ones(shape=(M.shape[0],))
 	y=np.array(y).astype(int)
@@ -135,19 +134,19 @@ def HPO_train_TopoAE(model, M, model_name, trial, param, y=[], epochs=200):
 	
 	best_val_loss = 10e10
 	best_epoch = -1
-	patience = 20
+	patience = 30
 	torch.save(model.state_dict(), f"{model_name}.pth")
 	
 	for epoch in range(0, epochs):
 		val_losses=[]
-		for batch, X in enumerate(train_dataloader):
+		for X in train_dataloader:
 			X=torch.tensor(scipy.sparse.csr_matrix(X[0], dtype="float32").todense()).to(device)
 			train_loss = model(X)
 			optimizer.zero_grad()
 			train_loss.backward()
 			optimizer.step()
 
-		for batch, X in enumerate(val_dataloader):
+		for X in val_dataloader:
 			X=torch.tensor(scipy.sparse.csr_matrix(X[0], dtype="float32").todense()).to(device)
 			val_losses.append(model(X).item())
 		val_loss=np.mean(val_losses)
@@ -155,16 +154,16 @@ def HPO_train_TopoAE(model, M, model_name, trial, param, y=[], epochs=200):
 		if np.around(val_loss/best_val_loss, decimals=2) < 0.95:
 			best_val_loss = val_loss
 			best_epoch = epoch
-			print(f"TopoAE checkpoint! Best epoch {best_epoch} | Best loss {best_val_loss:.7f}", flush=True)
+			print(f"TAE checkpoint! Best epoch {best_epoch} | Best loss {best_val_loss:.7f}", flush=True)
 			torch.save(model.state_dict(), f"{model_name}.pth")
 		elif epoch - best_epoch > patience:
 			model.load_state_dict(torch.load(f"{model_name}.pth"))
 			val_losses=[]
-			for batch, X in enumerate(val_dataloader):
+			for X in val_dataloader:
 				X=torch.tensor(scipy.sparse.csr_matrix(X[0], dtype="float32").todense()).to(device)
 				val_losses.append(model(X).item())
 			best_val_loss=np.mean(val_losses)
-			print(f"TopoAE early stopped at epoch {epoch} with best epoch {best_epoch} | Best loss: {best_val_loss:.7f}", flush=True)
+			print(f"TAE early stopped at epoch {epoch} with best epoch {best_epoch} | Best loss: {best_val_loss:.7f}", flush=True)
 			trial.report(best_val_loss, epoch)
 			if trial.should_prune():
 				raise optuna.exceptions.TrialPruned()
@@ -177,7 +176,7 @@ def HPO_train_TopoAE(model, M, model_name, trial, param, y=[], epochs=200):
 	
 	model.load_state_dict(torch.load(f"{model_name}.pth"))
 	val_losses=[]
-	for batch, X in enumerate(val_dataloader):
+	for X,y in val_dataloader:
 		X=torch.tensor(scipy.sparse.csr_matrix(X[0], dtype="float32").todense()).to(device)
 		val_losses.append(model(X).item())
 	best_val_loss=np.mean(val_losses)
@@ -186,7 +185,7 @@ def HPO_train_TopoAE(model, M, model_name, trial, param, y=[], epochs=200):
 		raise optuna.exceptions.TrialPruned()
 	return best_val_loss
 
-def build_TopoAE(trial, M):
+def build_TAE(trial, M):
 
 	ae_kwargs={}
 	ae_kwargs["input_dim"]=M.shape[1]
@@ -201,16 +200,16 @@ def build_TopoAE(trial, M):
 	
 	return model
 
-def objective_TopoAE(trial, M, y, model, model_name):
+def objective_TAE(trial, M, y, model, model_name):
 	params = {'lr': trial.suggest_loguniform('lr', 1e-4, 1e-1), 'weight_decay': trial.suggest_loguniform('weight_decay', 1e-4, 1e-1)}
-	model = build_TopoAE(trial, M)
-	val_loss = HPO_train_TopoAE(model=model, M=M, y=y, model_name=model_name, trial=trial, param=params)
+	model = build_TAE(trial, M)
+	val_loss = HPO_train_TAE(model=model, M=M, y=y, model_name=model_name, trial=trial, param=params)
 	
 	return val_loss
 
-def run_HPO_TopoAE(M, y, model_name):
-	model=partial(build_TopoAE, M = M)
-	obejctive=partial(objective_TopoAE, M = M, y=y, model=model, model_name=model_name)
+def run_HPO_TAE(M, y, model_name):
+	model=partial(build_TAE, M = M)
+	obejctive=partial(objective_TAE, M = M, y=y, model=model, model_name=model_name)
 	storage_name = "sqlite:///{}.db".format(model_name)
 	study = optuna.create_study(direction="minimize", sampler=optuna.samplers.TPESampler(), pruner=optuna.pruners.MedianPruner(),
 								study_name=model_name, storage=storage_name, load_if_exists=True)
@@ -234,29 +233,33 @@ def HPO_train_VAE(model, M, model_name, trial, param, y=[], epochs=300):
 	
 	best_val_loss = 10e10
 	best_epoch = -1
-	patience = 20
+	patience = 30
 	
+	annealer = mod.KLAnnealer()
+	global_step = 0
+
 	for epoch in range(0, epochs):
 		val_losses=[]
-		for batch, X in enumerate(train_dataloader):
-			X=torch.tensor(scipy.sparse.csr_matrix(X[0], dtype="float32").todense()).to(device)
+		for X in train_dataloader:
+			global_step += 1
+			beta = annealer.step()
 			X_hat, mu, log_var = model(X)
 			reconstruction_loss = loss_fn(X, X_hat)
 			kl_loss = torch.mean(-0.5 * torch.sum(1 + log_var - mu ** 2 - torch.exp(log_var), dim = 1), dim = 0)
-			train_loss = reconstruction_loss + param['kl_weigth'] * kl_loss
+			train_loss = reconstruction_loss + beta * kl_loss
 			optimizer.zero_grad()
 			train_loss.backward()
 			optimizer.step()
-			
-		for batch, X in enumerate(val_dataloader):
-			X=torch.tensor(scipy.sparse.csr_matrix(X[0], dtype="float32").todense()).to(device)
+
+		for X in val_dataloader:
 			X_hat, mu, log_var = model(X)
 			reconstruction_loss = loss_fn(X, X_hat)
 			kl_loss = torch.mean(-0.5 * torch.sum(1 + log_var - mu ** 2 - torch.exp(log_var), dim = 1), dim = 0)
-			tot_loss = reconstruction_loss + param['kl_weigth'] * kl_loss
+			beta = annealer.beta(global_step)   # use current beta
+			tot_loss = reconstruction_loss + beta * kl_loss
 			val_losses.append(tot_loss.item())
 		val_loss=np.mean(val_losses)
-		
+
 		if np.around(val_loss/best_val_loss, decimals=2) < 0.95:
 			best_val_loss = val_loss
 			best_epoch = epoch
@@ -266,12 +269,13 @@ def HPO_train_VAE(model, M, model_name, trial, param, y=[], epochs=300):
 		elif epoch - best_epoch > patience:
 			model.load_state_dict(torch.load(f"{model_name}.pth"))
 			val_losses=[]
-			for batch, X in enumerate(val_dataloader):
+			for X in val_dataloader:
 				X=torch.tensor(scipy.sparse.csr_matrix(X[0], dtype="float32").todense()).to(device)
 				X_hat, mu, log_var = model(X)
 				reconstruction_loss = loss_fn(X, X_hat)
 				kl_loss = torch.mean(-0.5 * torch.sum(1 + log_var - mu ** 2 - torch.exp(log_var), dim = 1), dim = 0)
-				tot_loss = reconstruction_loss + param['kl_weigth'] * kl_loss
+				beta = annealer.beta(global_step)   # use current beta
+				tot_loss = reconstruction_loss + beta * kl_loss
 				val_losses.append(tot_loss.item())
 			best_val_loss=np.mean(val_losses)
 			print(f"VAE early stopped at epoch {epoch} with best epoch {best_epoch} | Best loss: {best_val_loss:.7f}", flush=True)
@@ -288,12 +292,13 @@ def HPO_train_VAE(model, M, model_name, trial, param, y=[], epochs=300):
 
 	model.load_state_dict(torch.load(f"{model_name}.pth"))
 	val_losses=[]
-	for batch, X in enumerate(val_dataloader):
+	for X,y in val_dataloader:
 		X=torch.tensor(scipy.sparse.csr_matrix(X[0], dtype="float32").todense()).to(device)
 		X_hat, mu, log_var = model(X)
 		reconstruction_loss = loss_fn(X, X_hat)
 		kl_loss = torch.mean(-0.5 * torch.sum(1 + log_var - mu ** 2 - torch.exp(log_var), dim = 1), dim = 0)
-		tot_loss = reconstruction_loss + param['kl_weigth'] * kl_loss
+		beta = annealer.beta(global_step)   # use current beta
+		tot_loss = reconstruction_loss + beta * kl_loss
 		val_losses.append(tot_loss.item())
 	best_val_loss=np.mean(val_losses)
 	trial.report(best_val_loss, epoch)
@@ -304,14 +309,18 @@ def HPO_train_VAE(model, M, model_name, trial, param, y=[], epochs=300):
 
 def build_VAE(trial, M):
 	dp = trial.suggest_uniform('dp', low=0.1, high=0.8)
-	AE_model = mod.VAutoencoder(input_dim=M.shape[1], hidden_dim=int(M.shape[1]**(1/2)), latent_dim=int(M.shape[1]**(1/3)), dp=dp)
+	ae_kwargs = {"input_dim" : M.shape[1], 
+				 "hidden_dim" : int(M.shape[1]**(1/2)), 
+				 "latent_dim"  : int(M.shape[1]**(1/3)),
+				 "dp" : dp}
+
+	AE_model = mod.VAutoencoder(ae_kwargs=ae_kwargs)
 	
 	return AE_model
 
 def objective_VAE(trial, M, y, model, model_name):
 	params = {'lr': trial.suggest_loguniform('lr', 1e-4, 1e-1), 
-			  'weight_decay': trial.suggest_loguniform('weight_decay', 1e-4, 1e-1),
-			  'kl_weigth': trial.suggest_uniform('kl_weigth', 0.1, 0.9)}
+			  'weight_decay': trial.suggest_loguniform('weight_decay', 1e-4, 1e-1)}
 	model = build_VAE(trial, M)
 	val_loss = HPO_train_VAE(model=model, M=M, model_name=model_name, trial=trial, param=params)
 
@@ -326,3 +335,101 @@ def run_HPO_VAE(M, y, model_name):
 	study.optimize(obejctive, n_trials=25, n_jobs=1, gc_after_trial=True)
 	return study
 
+
+# ++++++++++++++++++++++++++++++ AE
+
+def HPO_train_AE(model, M, model_name, trial, param, y=[], epochs=300):
+	if len(y) == 0:
+		dataset = torch.tensor(scipy.sparse.csr_matrix(M, dtype="float32").todense())
+		del M
+		train_set, val_set = torch.utils.data.random_split(dataset, [0.85, 0.15])
+		train_dataloader = torch.utils.data.DataLoader(train_set, batch_size=128, shuffle=True)
+		val_dataloader = torch.utils.data.DataLoader(val_set, batch_size=64, shuffle=True)
+	else:
+		train_dataloader, val_dataloader = mlu.split_train_val(M, y)
+    
+	optimizer = torch.optim.Adam(model.parameters(), lr=param['lr'], weight_decay=param['weight_decay'])
+	loss_fn=torch.nn.MSELoss()
+	
+	best_val_loss = 10e10
+	best_epoch = -1
+	patience = 30
+	
+	for epoch in range(0, epochs):
+		val_losses=[]
+		for X in train_dataloader:
+			X_hat = model(X)
+			reconstruction_loss = loss_fn(X, X_hat)
+			optimizer.zero_grad()
+			reconstruction_loss.backward()
+			optimizer.step()
+
+		for X in val_dataloader:
+			X_hat = model(X)
+			reconstruction_loss = loss_fn(X, X_hat)
+			val_losses.append(reconstruction_loss.item())
+		val_loss=np.mean(val_losses)
+
+		if np.around(val_loss/best_val_loss, decimals=2) < 0.95:
+			best_val_loss = val_loss
+			best_epoch = epoch
+			print(f"AE checkpoint! Best epoch {best_epoch} | Best loss {best_val_loss:.7f}", flush=True)
+			torch.save(model.state_dict(), f"{model_name}.pth")
+		
+		elif epoch - best_epoch > patience:
+			model.load_state_dict(torch.load(f"{model_name}.pth"))
+			val_losses=[]
+			for X in val_dataloader:
+				X=torch.tensor(scipy.sparse.csr_matrix(X[0], dtype="float32").todense()).to(device)
+				X_hat = model(X)
+				reconstruction_loss = loss_fn(X, X_hat)
+				val_losses.append(reconstruction_loss.item())
+			best_val_loss=np.mean(val_losses)
+			print(f"AE early stopped at epoch {epoch} with best epoch {best_epoch} | Best loss: {best_val_loss:.7f}", flush=True)
+			trial.report(best_val_loss, epoch)
+			if trial.should_prune():
+				raise optuna.exceptions.TrialPruned()
+			
+			return best_val_loss
+		
+		trial.report(val_loss, epoch)
+
+		if trial.should_prune():
+			raise optuna.exceptions.TrialPruned()
+
+	model.load_state_dict(torch.load(f"{model_name}.pth"))
+	val_losses=[]
+	for X,y in val_dataloader:
+		X=torch.tensor(scipy.sparse.csr_matrix(X[0], dtype="float32").todense()).to(device)
+		X_hat = model(X)
+		reconstruction_loss = loss_fn(X, X_hat)
+		val_losses.append(reconstruction_loss.item())
+	best_val_loss=np.mean(val_losses)
+	trial.report(best_val_loss, epoch)
+	if trial.should_prune():
+		raise optuna.exceptions.TrialPruned()
+		
+	return best_val_loss
+
+def build_AE(trial, M):
+	dp = trial.suggest_uniform('dp', low=0.1, high=0.8)
+	AE_model = mod.BaseAE(input_dim=M.shape[1], hidden_dim=int(M.shape[1]**(1/2)), latent_dim=int(M.shape[1]**(1/3)), dp=dp)
+	
+	return AE_model
+
+def objective_AE(trial, M, y, model, model_name):
+	params = {'lr': trial.suggest_loguniform('lr', 1e-4, 1e-1), 
+			  'weight_decay': trial.suggest_loguniform('weight_decay', 1e-4, 1e-1)}
+	model = build_AE(trial, M)
+	val_loss = HPO_train_AE(model=model, M=M, model_name=model_name, trial=trial, param=params)
+
+	return val_loss
+
+def run_HPO_AE(M, y, model_name):
+	model = partial(build_AE, M=M)
+	obejctive = partial(objective_AE, M=M, y=y, model=model, model_name=model_name)
+	storage_name = "sqlite:///{}.db".format(model_name)
+	study = optuna.create_study(direction="minimize", sampler=optuna.samplers.TPESampler(), pruner=optuna.pruners.MedianPruner(),
+								study_name=model_name, storage=storage_name, load_if_exists=True)
+	study.optimize(obejctive, n_trials=25, n_jobs=1, gc_after_trial=True)
+	return study
