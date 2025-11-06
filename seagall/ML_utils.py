@@ -225,7 +225,7 @@ def create_pyg_dataset(adata: sc.AnnData, label: str, size: float = 1.0) -> torc
 		for label_val in set(adata.obs[label].dropna()):
 			sub_ad = adata[adata.obs[label] == label_val].copy()
 			sc.pp.subsample(sub_ad, fraction=size)
-			cells.append(sub_ad.obs.index.tolst())
+			cells.append(list(sub_ad.obs.index))
 			del sub_ad
 		cells = ut.flat_list(cells)
 		ad = adata[cells].copy()
