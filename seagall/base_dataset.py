@@ -1,3 +1,5 @@
+# module adapted from https://github.com/KevinMoonLab/GRAE.git
+
 """Base class for datasets.
 
 All data will be saved to a data/processed/dataset_name folder."""

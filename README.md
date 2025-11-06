@@ -48,7 +48,7 @@ for i, ct in enumerate(sorted(list(set(adata.obs.CellType)))):
 plt.xscale("log")
 plt.yscale("log")
 ```
-
+![alt text](https://github.com/gmalagol10/seagall/blob/main/seagall/GnnFig1.png?raw=true)
 
 ## Version History
 

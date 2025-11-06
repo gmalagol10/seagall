@@ -1,3 +1,5 @@
+# module adapted from https://github.com/KevinMoonLab/GRAE.git
+
 """Procrustes port for scalable GRAE on larger datasets."""
 import numpy as np
 

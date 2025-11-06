@@ -1,3 +1,5 @@
+# module adapted from https://github.com/KevinMoonLab/GRAE.git
+
 """Torch modules."""
 import torch
 import torch.nn as nn

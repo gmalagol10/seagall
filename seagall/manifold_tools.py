@@ -1,3 +1,5 @@
+# module adapted from https://github.com/KevinMoonLab/GRAE.git
+
 """PHATE and procrustes tools."""
 import numpy as np
 import phate

@@ -1,3 +1,5 @@
+# module adapted from https://github.com/KevinMoonLab/GRAE.git
+
 """Parent class for all project models."""
 import time
 import torch 
