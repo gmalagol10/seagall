@@ -53,7 +53,7 @@ plt.yscale("log")
 Returns an updated AnnData object with:
 
 
-1)Average importance of each feature for each label (stored in adata.var with the name "SEAGALL_Importance_for_*)"
+1)Average importance of each feature for each label, stored in adata.var with the name "SEAGALL_Importance_for_*"
 
 2)Complete cell - importance matrix stored in adata.layers["SEAGALL_Importance"]
 
