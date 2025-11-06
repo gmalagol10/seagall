@@ -55,7 +55,7 @@ Returns an updated AnnData object with:
 
 1)Average importance of each feature for each label (stored in adata.var with the name "SEAGALL_Importance_for_*)"
 
-2)Complete cell - importance matrix stored in adata.layers["SEAGALL_Imprtance"]
+2)Complete cell - importance matrix stored in adata.layers["SEAGALL_Importance"]
 
 3)Geometry aware cell-to-cell graph stored in adata.obsp["GRAE_graph"] and GRAE's latent space in adata.obsm["GRAE_latent_space"]
 
