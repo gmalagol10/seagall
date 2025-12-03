@@ -3,7 +3,7 @@
 #CONDA_ENV=graph
 #ACTIVATE=/store24/project24/ladcol_012/miniconda3/bin/activate
 #source ${ACTIVATE} ${CONDA_ENV}
-
+vndskna
 module load ngs/MACS2/2.1.2
 
 frag_file=$1
