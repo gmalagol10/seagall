@@ -164,7 +164,7 @@ def process_dataset(dataset_info):
 	for run in range(0, 10):
 		for dp in np.linspace(0, 50, 6).astype(int):
 
-			PCA
+			#PCA
 			print(f"Run {run}/10 and dropout {dp}", time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()), "AE is --> PCA",  flush=True)
 			sc.pp.pca(adata, layer=f"X_{str(dp)}_{str(run)}", n_comps=int(adata.shape[1]**(1/3)))
 			latent_space=adata.obsm["X_pca"].copy() 
