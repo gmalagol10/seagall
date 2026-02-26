@@ -94,9 +94,6 @@ class BaseAE(torch.nn.Module):
 		z = self.encode(x)
 		x_hat = self.decode(z)
 
-		# The loss can of course be changed. If this is your first time
-		# working with autoencoders, a good exercise would be to 'grok'
-		# the meaning of different losses.
 		reconstruction_error = self.loss_fn(x, x_hat)
 		return reconstruction_error		
 		

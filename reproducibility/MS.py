@@ -43,7 +43,7 @@ for n,arg in zip(names,sys.argv):
 	
 
 print(time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()), f"Loading {matrix}", flush=True)					 	
-adata = epi.read_h5ad(matrix)
+adata = sc.read_h5ad(matrix)
 
 Path(f"{path}/BestParams").mkdir(parents=True, exist_ok=True)	
 
@@ -52,7 +52,7 @@ hpo_name=f"{path}/BestParams/{name}_best"
 if os.path.isfile(f"{hpo_name}.json") == False:
 
 	print(time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()), f"HPO", flush=True)		
-	epi.pp.neighbors(adata, use_rep=f"X_{rep}", method="umap")
+	sc.pp.neighbors(adata, use_rep=f"X_{rep}", method="umap")
 	edges = pd.DataFrame(adata.obsp["connectivities"].todense()).rename_axis('Source').reset_index().melt('Source', value_name='Weight', var_name='Target').query('Source != Target').reset_index(drop=True)
 	edges = edges[edges["Weight"]!=0]
 	mydata = torch_geometric.data.Data(x=torch.tensor(scipy.sparse.csr_matrix(adata.X, dtype="float32").todense()), 
@@ -85,7 +85,7 @@ for run in range(0, 50):
 	if os.path.isfile(f"{final_path}/{name}_XAITop{str(n_feat)}Features_Jaccard.tsv.gz") == False: 
 		Path(final_path).mkdir(parents=True, exist_ok=True)	
 			
-		epi.pp.neighbors(adata, use_rep=f"X_{rep}", method="umap")
+		sc.pp.neighbors(adata, use_rep=f"X_{rep}", method="umap")
 		edges = pd.DataFrame(adata.obsp["connectivities"].todense()).rename_axis('Source').reset_index().melt('Source', value_name='Weight', var_name='Target').query('Source != Target').reset_index(drop=True)
 		edges = edges[edges["Weight"]!=0]
 

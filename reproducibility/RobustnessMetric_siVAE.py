@@ -85,8 +85,7 @@ def main():
 	start_time = time.time()
 
 	ctx = get_context("spawn")
-	n_workers = min(len(dataset_info_list), max(1, os.cpu_count() // 2))
-
+	
 	n_workers = min(len(dataset_info_list), max(1, os.cpu_count() // 2))
 
 	with ctx.Pool(processes=n_workers) as pool:
@@ -98,10 +97,8 @@ def main():
 	hetero = pd.concat(results[1], ignore_index=True)
 	hetero.to_csv("Tables/Heterogeneity_siVAE.tsv.gz", sep="\t", compression="gzip", index=False)
 
-
 	elapsed_time = time.time() - start_time
 	print(f"Processing completed in {elapsed_time:.2f} seconds")
-
 
 if __name__ == "__main__":
 	main()

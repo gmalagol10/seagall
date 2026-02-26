@@ -159,12 +159,12 @@ def process_dataset(dataset_info):
 	theta = estimate_theta_smoothed(X)
 	nb_consts = precompute_nb_constants(theta)
 	rob_rows = []
-	# hetero_rows = []
+	hetero_rows = []
 
 	for run in range(0, 10):
 		for dp in np.linspace(0, 50, 6).astype(int):
 
-			#PCA
+			PCA
 			print(f"Run {run}/10 and dropout {dp}", time.strftime("%a, %d %b %Y %H:%M:%S", time.localtime()), "AE is --> PCA",  flush=True)
 			sc.pp.pca(adata, layer=f"X_{str(dp)}_{str(run)}", n_comps=int(adata.shape[1]**(1/3)))
 			latent_space=adata.obsm["X_pca"].copy() 
@@ -412,8 +412,8 @@ def main():
 	start_time = time.time()
 
 	ctx = get_context("spawn")
-	n_workers = min(len(dataset_info_list), max(1, os.cpu_count() // 2))
 
+	n_workers = min(len(dataset_info_list), max(1, os.cpu_count() // 2))
 	with ctx.Pool(processes=n_workers) as pool:
 		results = pool.map(process_dataset, dataset_info_list)
 

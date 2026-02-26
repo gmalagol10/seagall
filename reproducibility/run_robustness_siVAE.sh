@@ -13,9 +13,9 @@
 # ----------------------------
 # Environment setup
 # ----------------------------
-CONDA_ENV=graph
-ACTIVATE=/store24/project24/ladcol_012/miniconda3/bin/activate
-source ${ACTIVATE} ${CONDA_ENV}
+module purge
+module load miniconda   # or module load anaconda
+source activate graph   # <-- your conda env name
 
 # Prevent CPU oversubscription
 export OMP_NUM_THREADS=1
