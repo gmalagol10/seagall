@@ -5,7 +5,9 @@ Geometry-aware graph attention networks to explain single-cell chromatin states 
 
 Gabriele Malagoli, Patrick Hanel, Anna Danese, Guy Wolf & Maria Colomé-Tatché
 
-https://doi.org/10.1101/2025.05.29.656611
+https://doi.org/10.1186/s13059-026-04066-2
+
+
 
 ![alt text](https://github.com/gmalagol10/seagall/blob/main/seagall/GnnFig1.png?raw=true)
 
@@ -61,6 +63,27 @@ Returns an updated AnnData object with:
 2)Complete cell - importance matrix stored in adata.layers["SEAGALL_Importance"]
 
 3)Geometry aware cell-to-cell graph stored in adata.obsp["GRAE_graph"] and GRAE's latent space in adata.obsm["GRAE_latent_space"]
+
+## 📖 Citation
+
+If you use **SEAGALL** in your work, please cite:
+
+Malagoli G, Hanel P, Danese A, Wolf G, Colomé-Tatché M.
+**Geometry-aware graph attention networks to explain single-cell chromatin states and gene expression with SEAGALL**
+*Genome Biology* (2026).  
+https://doi.org/10.1186/s13059-026-04066-2
+
+### BibTeX
+
+```bibtex
+@article{malagoli2026seagall,
+  author  = {Malagoli, Gabriele and Hanel, Patrick and Danese, Anna and Wolf, Guy and Colom{\'e}-Tatch{\'e}, Maria},
+  title   = {Geometry-aware graph attention networks to explain single-cell chromatin states and gene expression},
+  journal = {Genome Biology},
+  year    = {2026},
+  doi     = {10.1186/s13059-026-04066-2}
+}
+
 
 ## Version History
 
