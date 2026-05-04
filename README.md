@@ -1,7 +1,7 @@
 # SEAGALL
 ### Single-cell Explainable geometry Aware Graph Attention Learning pipeLine
 
-Geometry-aware graph attention networks to explain single-cell chromatin states and gene expression (Genome Biology, 2026)
+Geometry-aware graph attention networks to explain single-cell chromatin states and gene expression with SEAGALL (Genome Biology, 2026)
 
 Gabriele Malagoli, Patrick Hanel, Anna Danese, Guy Wolf & Maria Colomé-Tatché
 
@@ -78,7 +78,7 @@ https://doi.org/10.1186/s13059-026-04066-2
 ```bibtex
 @article{malagoli2026seagall,
   author  = {Malagoli, Gabriele and Hanel, Patrick and Danese, Anna and Wolf, Guy and Colom{\'e}-Tatch{\'e}, Maria},
-  title   = {Geometry-aware graph attention networks to explain single-cell chromatin states and gene expression},
+  title   = {Geometry-aware graph attention networks to explain single-cell chromatin states and gene expression with SEAGALL},
   journal = {Genome Biology},
   year    = {2026},
   doi     = {10.1186/s13059-026-04066-2}
